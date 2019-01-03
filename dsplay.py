@@ -6,7 +6,7 @@ GPIO.setmode(GPIO.BCM)
 
 # Debouncer
 class ButtonHandler(threading.Thread):
-    def __init__(self, pin, func, edge='both', bouncetime=200):
+    def __init__(self, pin, func, edge='both', bouncetime=150):
         super().__init__(daemon=True)
 
         self.edge = edge
@@ -147,12 +147,12 @@ def checkRunning():
 
     if frod != 0:
         if frod != int(time.time() / 86400):
-            frod = int(time.time() / 86400)
+            frod = 0
             runtimeVal = 0
             stoptimeVal = 0
 
     if running:
-        if ppmArray[1] == 0:
+        if ppmArray[1] == 0 and frod != 0:
             runtimeVal = runtimeVal - 1
             stoptimeVal = stoptimeVal + 1
         runtimeVal = runtimeVal + 1
@@ -270,16 +270,16 @@ def resetCount(val):
 opActionHandle = ButtonHandler(ACTION_DI, opAction, edge='rising', bouncetime=120)
 opActionHandle.start()
 
-countUpHandle = ButtonHandler(ADD_CNT_DI, countUp, edge='rising', bouncetime=120)
+countUpHandle = ButtonHandler(ADD_CNT_DI, countUp, edge='rising', bouncetime=100)
 countUpHandle.start()
 
-countDownHandle = ButtonHandler(DEC_CNT_DI, countDown, edge='rising', bouncetime=120)
+countDownHandle = ButtonHandler(DEC_CNT_DI, countDown, edge='rising', bouncetime=100)
 countDownHandle.start()
 
-resetCountHandle = ButtonHandler(RESET_CNT_DI, resetCount, edge='rising', bouncetime=120)
+resetCountHandle = ButtonHandler(RESET_CNT_DI, resetCount, edge='rising', bouncetime=100)
 resetCountHandle.start()
 
-incrementOpHandle = ButtonHandler(INC_OP_CNT_DI, incrementOp, edge='rising', bouncetime=120)
+incrementOpHandle = ButtonHandler(INC_OP_CNT_DI, incrementOp, edge='rising', bouncetime=100)
 incrementOpHandle.start()
 
 # This adds interrupts to all of the inputs so that they will trigger the
