@@ -120,7 +120,6 @@ stopVal = ()
 # Main logic of performance indication
 def timeInc():
     global lastUpdate
-    print("time: ",int(time.time()%60))
     if(lastUpdate != int(time.time()/60)):
         lastUpdate = int(time.time()/60)
         for x in range(24,0,-1):
@@ -164,7 +163,9 @@ def checkRunning():
     else:
         if frod != 0:
             stoptimeVal = stoptimeVal +1
-
+	if ppmArray[1] > 0
+	    runtimeVal = runtimeVal + 1
+            stoptimeVal = stoptimeVal - 1
         if(ppmArray[1] + ppmArray[2] + ppmArray[3] + ppmArray[4] + ppmArray[5]) >= 5:
             running = True
             runningVal.config(bg="green")
@@ -194,10 +195,6 @@ def addTaktToDB(loctime):
         rolling = 1
     for x in range(0,rolling):
         average = average + ppmArray[x+1]
-
-    print(ppmArray)
-    print(rolling)
-    print(loctime)
 
     if(loctime != 0):
         average = ((average/rolling)*( (rolling*6)/(rolling*6 + loctime/10) ) ) + ((ppmArray[0]/(loctime/10))*((loctime/10)/(rolling*6 + loctime/10)))
@@ -293,7 +290,6 @@ GPIO.add_event_detect(INC_OP_CNT_DI, GPIO.BOTH, callback=incrementOpHandle)
 # Show the main screen to check production
 def showProdScreen(activityIns, prodtaktIns):
 
-    print("Opening Prod Screen")
     global insAct
     global insProdtakt
 
