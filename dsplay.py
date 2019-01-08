@@ -163,9 +163,11 @@ def checkRunning():
     else:
         if frod != 0:
             stoptimeVal = stoptimeVal +1
-	if ppmArray[1] > 0
-	    runtimeVal = runtimeVal + 1
+            
+        if(ppmArray[1] > 0):
+            runtimeVal = runtimeVal + 1
             stoptimeVal = stoptimeVal - 1
+            
         if(ppmArray[1] + ppmArray[2] + ppmArray[3] + ppmArray[4] + ppmArray[5]) >= 5:
             running = True
             runningVal.config(bg="green")
