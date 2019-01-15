@@ -159,7 +159,7 @@ def checkRunning():
             running = False
             runningVal.config(bg="gray")
             stopVal.config(bg="red")
-            insAct("Stop",time.time()-(60*5))
+            insAct("Stop",time.time()-(60*3))
     else:
         if frod != 0:
             stoptimeVal = stoptimeVal +1
@@ -172,7 +172,7 @@ def checkRunning():
             running = True
             runningVal.config(bg="green")
             stopVal.config(bg="gray")
-            insAct("Start",time.time()-(60*5))
+            insAct("Start",time.time()-(60*3))
 
     runtime.set(str(int(runtimeVal/60))+":"+("%02d"%(runtimeVal%60)))
     stoptime.set(str(int(stoptimeVal/60))+":"+("%02d"%(stoptimeVal%60)))
