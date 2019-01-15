@@ -155,7 +155,7 @@ def checkRunning():
             runtimeVal = runtimeVal - 1
             stoptimeVal = stoptimeVal + 1
         runtimeVal = runtimeVal + 1
-        if(ppmArray[1] + ppmArray[2] + ppmArray[3] + ppmArray[4] + ppmArray[5]) <= 5:
+        if(ppmArray[1] + ppmArray[2] + ppmArray[3]) == 0:
             running = False
             runningVal.config(bg="gray")
             stopVal.config(bg="red")
@@ -168,7 +168,7 @@ def checkRunning():
             runtimeVal = runtimeVal + 1
             stoptimeVal = stoptimeVal - 1
             
-        if(ppmArray[1] + ppmArray[2] + ppmArray[3] + ppmArray[4] + ppmArray[5]) >= 5:
+        if(ppmArray[1] + ppmArray[2] + ppmArray[3]) > 0:
             running = True
             runningVal.config(bg="green")
             stopVal.config(bg="gray")
