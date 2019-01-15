@@ -3,7 +3,7 @@ from uuid import getnode as get_mac
 import tkinter as tk
 
 mac = get_mac()
-pittsteel = psycopg2.connect("dbname=PittSteel3 host=192.168.2.3 user=caleb password=tori")
+pittsteel = psycopg2.connect("dbname=PittSteel host=192.168.2.3 user=caleb password=tori")
 cur = pittsteel.cursor()
 station_id = -1
  
