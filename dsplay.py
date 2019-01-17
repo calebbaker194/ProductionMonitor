@@ -168,11 +168,11 @@ def checkRunning():
             runtimeVal = runtimeVal + 1
             stoptimeVal = stoptimeVal - 1
             
-        if(ppmArray[1] + ppmArray[2] + ppmArray[3]) > 0:
+        if(ppmArray[1]) > 2:
             running = True
             runningVal.config(bg="green")
             stopVal.config(bg="gray")
-            insAct("Start",time.time()-(60*3))
+            insAct("Start",time.time())
 
     runtime.set(str(int(runtimeVal/60))+":"+("%02d"%(runtimeVal%60)))
     stoptime.set(str(int(stoptimeVal/60))+":"+("%02d"%(stoptimeVal%60)))
