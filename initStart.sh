@@ -2,14 +2,14 @@
 sudo apt-get update
 sudo apt-get -y upgrade
 sudo apt-get -y install git
-sudo mkdir ~/Desktop/Production
-sudo mkdir ~/src
+mkdir ~/Desktop/Production
+mkdir ~/src
 cd ~/src
 git clone https://github.com/calebbaker194/ProductionMonitor
 cd ./ProductionMonitor
 git pull
-sudo cp ./* ~/Desktop/Production/
-sudo cp ./codeRefresh.sh ~/Desktop
+cp ./* ~/Desktop/Production/
+cp ./refreshCode.sh ~/Desktop
 sudo apt-get -y install 
 sudo pip3 install psycopg2-binary
 echo "deb-src http://apt.postgresql.org/pub/repos/apt/ wheezy-pgdg main" | sudo tee /etc/apt/sources.list.d/pgdg.list
