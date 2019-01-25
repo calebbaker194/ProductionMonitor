@@ -55,6 +55,8 @@ def register(callmain):
         question.mainloop()
     else :
         cur.execute("""SELECT station_slow_speed,station_run_speed FROM psproductivity.station WHERE station_mac = %s;""",(mac,))
+        global slowSpeed
+        global runSpeed
         rows2 = cur.fetchall()
         slowSpeed = rows2[0][0]
         runSpeed = rows2[0][1]
