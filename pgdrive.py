@@ -25,11 +25,11 @@ def register(callmain):
     
     cur.execute("""SELECT station_id,station_name FROM psproductivity.station WHERE station_mac = %s;""",(mac,))
     rows = cur.fetchall()
-    def enterName(rwin,name):
+    def enterName(rwin,name,fast,slow):
         global pittsteel
         global slowSpeed
         global runSpeed
-        cur.execute("""INSERT INTO psproductivity.station (station_name,station_mac) VALUES(%s,%s)""",(name,mac))
+        cur.execute("""INSERT INTO psproductivity.station (station_name,station_mac,station_slow_speed,station_run_speed) VALUES(%s,%s,%s,%s)""",(name,mac,slow,fast))
         pittsteel.commit()
         cur.execute("""SELECT station_slow_speed,station_run_speed FROM psproductivity.station WHERE station_mac = %s;""",(mac,))
         rows2 = cur.fetchall()
@@ -45,7 +45,13 @@ def register(callmain):
         tk.Label(question, text = 'Enter Station Name').pack()
         a = tk.Entry(question)
         a.pack()
-        tk.Button(question, text='Submit', command = lambda:enterName(question,a.get()) ).pack()
+        tk.Label(question, text = 'Enter Run Speed').pack()
+        b = tk.Entry(question)
+        b.pack()
+        tk.Label(question, text = 'Enter Slow Speed').pack()
+        c = tk.Entry(question)
+        c.pack()
+        tk.Button(question, text='Submit', command = lambda:enterName(question,a.get(),b.get(),c.get())).pack()
         question.mainloop()
     else :
         cur.execute("""SELECT station_slow_speed,station_run_speed FROM psproductivity.station WHERE station_mac = %s;""",(mac,))
