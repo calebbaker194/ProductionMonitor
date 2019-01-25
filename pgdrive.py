@@ -1,9 +1,11 @@
 import psycopg2
 from uuid import getnode as get_mac
 import tkinter as tk
-
+slowSpeed = 0
+runSpeed = 0
 mac = get_mac()
 pittsteel = psycopg2.connect("dbname=PittSteel host=192.168.2.3 user=caleb password=tori")
+
 cur = pittsteel.cursor()
 station_id = -1
  
@@ -20,12 +22,19 @@ def setStationId(station,callmain):
 def register(callmain):
     global mac
     global cur
+    
     cur.execute("""SELECT station_id,station_name FROM psproductivity.station WHERE station_mac = %s;""",(mac,))
     rows = cur.fetchall()
     def enterName(rwin,name):
         global pittsteel
+        global slowSpeed
+        global runSpeed
         cur.execute("""INSERT INTO psproductivity.station (station_name,station_mac) VALUES(%s,%s)""",(name,mac))
         pittsteel.commit()
+        cur.execute("""SELECT station_slow_speed,station_run_speed FROM psproductivity.station WHERE station_mac = %s;""",(mac,))
+        rows2 = cur.fetchall()
+        slowSpeed = rows2[0][0]
+        runSpeed = rows2[0][1]
         nonlocal callmain
         rwin.destroy()
         setStationId(-1,callmain)
@@ -39,6 +48,10 @@ def register(callmain):
         tk.Button(question, text='Submit', command = lambda:enterName(question,a.get()) ).pack()
         question.mainloop()
     else :
+        cur.execute("""SELECT station_slow_speed,station_run_speed FROM psproductivity.station WHERE station_mac = %s;""",(mac,))
+        rows2 = cur.fetchall()
+        slowSpeed = rows2[0][0]
+        runSpeed = rows2[0][1]
         setStationId(rows[0][0],callmain)
 
 

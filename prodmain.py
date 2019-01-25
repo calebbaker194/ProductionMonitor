@@ -9,6 +9,8 @@ def dbIsRegister():
     global running
     print("Starting ProdScreen")
     t2 = Thread(target = dsplay.showProdScreen, args=(pgdrive.insertActivity,pgdrive.insertprodtakt))
+    dsplay.slowSpeed = pgdrive.slowSpeed
+    dsplay.runSpeed = pgdrive.runSpeed
     t2.start()
     print("Entering Main Loop")
     t1 = Thread(target = timeStep)

@@ -151,12 +151,11 @@ def checkRunning():
             stoptimeVal = 0
 
     if running:
-        if ppmArray[1] == 0 and frod != 0:
-            runtimeVal = runtimeVal - 1
-            stoptimeVal = stoptimeVal + 1
         runtimeVal = runtimeVal + 1
-        if(ppmArray[1] + ppmArray[2] + ppmArray[3]) == 0:
+        if(opmArray[1] < slowSpeed and opmArray[2] < slowSpeed and opmArray[3] < slowSpeed):
             running = False
+            runtimeVal = runtimeVal - 4
+            stoptimeVal = stoptimeVal + 3
             runningVal.config(bg="gray")
             stopVal.config(bg="red")
             insAct("Stop",time.time()-(60*3))
@@ -164,15 +163,13 @@ def checkRunning():
         if frod != 0:
             stoptimeVal = stoptimeVal +1
             
-        if(ppmArray[1] > 0):
-            runtimeVal = runtimeVal + 1
-            stoptimeVal = stoptimeVal - 1
-            
-        if(ppmArray[1]) > 2:
+        if(opmArray[1]) >= runSpeed and opmArray[2] >= runSpeed and opmArray[3] >= runSpeed):
             running = True
+            stoptimeVal = stoptimeVal -4
+            runtimeVal = runtimeVal + 3
             runningVal.config(bg="green")
             stopVal.config(bg="gray")
-            insAct("Start",time.time())
+            insAct("Start",time.time()-(60*3))
 
     runtime.set(str(int(runtimeVal/60))+":"+("%02d"%(runtimeVal%60)))
     stoptime.set(str(int(stoptimeVal/60))+":"+("%02d"%(stoptimeVal%60)))
@@ -217,11 +214,6 @@ def opAction(val):
     global ppmArray
 
     opmArray[0] = opmArray[0] + 1
-    if(opmArray[0] > 7) and not running:
-        running = True
-        runningVal.config(bg="green")
-        stopVal.config(bg="gray")
-        insAct("Start",time.time() - (time.time() % 60))
 
     currentOp = currentOp + 1
     op.set(str(currentOp)+"/"+str(opCnt))
@@ -294,9 +286,13 @@ def showProdScreen(activityIns, prodtaktIns):
 
     global insAct
     global insProdtakt
+    global slowSpeed
+    global runSpeed
 
     insAct = activityIns
     insProdtakt = prodtaktIns
+    slowSpeed = stopSpd
+    runSpeed = runSpd
 
     global takt
     global op
