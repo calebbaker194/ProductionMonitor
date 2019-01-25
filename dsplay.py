@@ -93,6 +93,12 @@ runtimeVal = 0
 # How long we have been stopped today (after first rod in minutes)
 stoptimeVal = 0
 
+# The minimum run speed
+slowSpeed = 0
+
+# the running speed threshold
+runSpeed = 0
+
 ################################
 
 
@@ -163,7 +169,7 @@ def checkRunning():
         if frod != 0:
             stoptimeVal = stoptimeVal +1
             
-        if(opmArray[1]) >= runSpeed and opmArray[2] >= runSpeed and opmArray[3] >= runSpeed):
+        if (opmArray[1] >= runSpeed and opmArray[2] >= runSpeed and opmArray[3] >= runSpeed) :
             running = True
             stoptimeVal = stoptimeVal -4
             runtimeVal = runtimeVal + 3
@@ -291,8 +297,6 @@ def showProdScreen(activityIns, prodtaktIns):
 
     insAct = activityIns
     insProdtakt = prodtaktIns
-    slowSpeed = stopSpd
-    runSpeed = runSpd
 
     global takt
     global op
