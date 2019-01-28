@@ -1,5 +1,5 @@
 from tkinter import *
-import RPi.GPIO as GPIO
+import queue
 import threading
 import time
 GPIO.setmode(GPIO.BCM)
@@ -99,20 +99,10 @@ slowSpeed = 0
 # the running speed threshold
 runSpeed = 0
 
+# An array of time stamps that represent the part creations to calculate the takt time
+eatime= queue.Queue()
+
 ################################
-
-
-# The array is 25 long, Representing 25 minutes.
-# Decisions on Start and stop times will be based on 5 minute intervals.
-# If I have a 5 minute stop interval then I will add it to the
-#database a Stop time
-# If I have 5 minutes of production the I will set it as a start time.
-# Production for the start time may be hard to estimate. I think Im
-#going to define a
-# Constant that says, Okay there needs to be at least 5 Operations a
-#minute to qualify
-# as either Start or stop time.
-
 
 # Variables For the Labels in the operator interface
 runtime = ()
@@ -146,6 +136,7 @@ def checkRunning():
     global runtime
     global stoptime
     global frod
+    global eatime
 
     if(frod == 0 and ppmArray[1] > 0):
         frod = int(time.time() / 86400)
@@ -160,6 +151,7 @@ def checkRunning():
         runtimeVal = runtimeVal + 1
         if(opmArray[1] < slowSpeed and opmArray[2] < slowSpeed and opmArray[3] < slowSpeed):
             running = False
+            eatime= queue.Queue()
             runtimeVal = runtimeVal - 4
             stoptimeVal = stoptimeVal + 3
             runningVal.config(bg="gray")
@@ -183,32 +175,40 @@ def checkRunning():
 
 def addTaktToDB(loctime):
     global opmArray
-    global takt
-    rolling = 5
-    average = 0
-    if ppmArray[6] != 0:
-        rolling = 6
-    elif ppmArray[5] != 0:
-        rolling = 5
-    elif ppmArray[4] != 0:
-        rolling = 4
-    elif ppmArray[3] != 0:
-        rolling = 3
-    elif ppmArray[2] != 0:
-        rolling = 2
-    else:
-        rolling = 1
-    for x in range(0,rolling):
-        average = average + ppmArray[x+1]
 
-    if(loctime != 0):
-        average = ((average/rolling)*( (rolling*6)/(rolling*6 + loctime/10) ) ) + ((ppmArray[0]/(loctime/10))*((loctime/10)/(rolling*6 + loctime/10)))
-    else:
-        average = average/rolling
-    takt.set("{0:.2f} O/m".format(average))
+    calcTakt()
 
     if ppmArray[1] != 0 and loctime == 0:
         insProdtakt(ppmArray[1], time.time() - 60)
+
+
+# Calc Takt time and display on the monitor also remove old times
+def calcTakt():
+    print("calc")
+    global eatime
+    global takt
+    l = []
+    sumtime = 0
+    oldesttime = time.time()
+    
+    while eatime.qsize() > 0:
+        t = eatime.get()
+        if t < time.time()-60*60:
+            continue
+        else:
+            l.append(t)
+            sumtime = sumtime + 1
+            if oldesttime > t:
+                oldesttime = t
+
+    for e in l:
+        eatime.put(e)
+    average = sumtime/((time.time() - oldesttime)/60)
+    print(sumtime,"/((",time.time(),"-",oldesttime,")/60")
+    takt.set("{0:.2f} O/m".format(average))
+
+        
+            
 
 # Fire when an operation occurs
 def opAction(val):
@@ -218,6 +218,7 @@ def opAction(val):
     global op
     global opCnt
     global ppmArray
+    global eatime
 
     opmArray[0] = opmArray[0] + 1
 
@@ -226,6 +227,8 @@ def opAction(val):
     if(currentOp == opCnt):
         countUp("cnt")
         ppmArray[0] = ppmArray[0] + 1
+        eatime.put(time.time())
+        calcTakt()
         currentOp = 0
 
 # add one to the number of operations to produce an item
