@@ -90,11 +90,11 @@ frod = 0
 # How long we have been running today (in minutes)
 runtimeVal = 0
 
-# How long we have been stopped today (after first rod in minutes)
-stoptimeVal = 0
+# how much time the last loockBackDist operations must occur in to be running
+lookBackTime = 0
 
-# The minimum run speed
-slowSpeed = 0
+# how many operations to look back
+lookBackDist = 0
 
 # the running speed threshold
 runSpeed = 0
@@ -133,8 +133,8 @@ def checkRunning():
     global running
     global runtimeVal
     global stoptimeVal
-    global runtime
-    global stoptime
+    global lookBackDist
+    global lookBackTime
     global frod
     global eatime
 
@@ -149,29 +149,58 @@ def checkRunning():
 
     if running:
         runtimeVal = runtimeVal + 1
-        if(opmArray[1] < slowSpeed and opmArray[2] < slowSpeed and opmArray[3] < slowSpeed):
+        if(isStopped()):
             running = False
             eatime= queue.Queue()
-            runtimeVal = runtimeVal - 4
-            stoptimeVal = stoptimeVal + 3
+            runtimeVal = runtimeVal - (lookBackDist + 1)
+            stoptimeVal = stoptimeVal + lookBackDist
             runningVal.config(bg="gray")
             stopVal.config(bg="red")
-            insAct("Stop",time.time()-(60*3))
+            insAct("Stop",time.time()-(60*lookBackDist))
     else:
         if frod != 0:
             stoptimeVal = stoptimeVal +1
             
-        if (opmArray[1] >= runSpeed and opmArray[2] >= runSpeed and opmArray[3] >= runSpeed) :
+        if (isRunning()) :
             running = True
-            stoptimeVal = stoptimeVal -4
-            runtimeVal = runtimeVal + 3
+            stoptimeVal = stoptimeVal - (lookBackDist + 1)
+            runtimeVal = runtimeVal + lookBackDist
             runningVal.config(bg="green")
             stopVal.config(bg="gray")
-            insAct("Start",time.time()-(60*3))
+            insAct("Start",time.time()-(60*lookBackDist))
 
     runtime.set(str(int(runtimeVal/60))+":"+("%02d"%(runtimeVal%60)))
     stoptime.set(str(int(stoptimeVal/60))+":"+("%02d"%(stoptimeVal%60)))
 
+def isStopped():
+    global eatime
+    global lookBackTime
+    l = list(eatime.queue)
+    l.sort(reverse=True)
+
+    for x in l:
+        return x < time.time() - 60 * lookBackTime
+
+def isRunning():
+    global eatime
+    global lookBackDist
+    global lookBackTime
+    
+    count = 0
+    if(eatime.qsize < lookBackDist)
+        return false;
+
+    l = list(eatime.queue)
+    l.sort(reverse=True)
+
+    for x in l:
+        if count >= lookBackDist:
+            break
+        if x < (time.time() - (lookBackTime * 60)):
+            return false
+            
+
+    return true
 
 def addTaktToDB(loctime):
     global opmArray

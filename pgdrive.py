@@ -1,8 +1,8 @@
 import psycopg2
 from uuid import getnode as get_mac
 import tkinter as tk
-slowSpeed = 0
-runSpeed = 0
+lookBackTime = 0
+lookBackDist = 0
 mac = get_mac()
 pittsteel = psycopg2.connect("dbname=PittSteel host=192.168.2.3 user=caleb password=tori")
 
@@ -31,10 +31,10 @@ def register(callmain):
         global runSpeed
         cur.execute("""INSERT INTO psproductivity.station (station_name,station_mac,station_slow_speed,station_run_speed) VALUES(%s,%s,%s,%s)""",(name,mac,slow,fast))
         pittsteel.commit()
-        cur.execute("""SELECT station_slow_speed,station_run_speed FROM psproductivity.station WHERE station_mac = %s;""",(mac,))
+        cur.execute("""SELECT station_lbt,station_lbd FROM psproductivity.station WHERE station_mac = %s;""",(mac,))
         rows2 = cur.fetchall()
-        slowSpeed = rows2[0][0]
-        runSpeed = rows2[0][1]
+        lookBackTime = rows2[0][0]
+        lookBackDist = rows2[0][1]
         nonlocal callmain
         rwin.destroy()
         setStationId(-1,callmain)
