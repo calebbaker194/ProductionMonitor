@@ -25,11 +25,11 @@ def register(callmain):
     
     cur.execute("""SELECT station_id,station_name FROM psproductivity.station WHERE station_mac = %s;""",(mac,))
     rows = cur.fetchall()
-    def enterName(rwin,name,fast,slow):
+    def enterName(rwin,name,time,dist):
         global pittsteel
-        global slowSpeed
-        global runSpeed
-        cur.execute("""INSERT INTO psproductivity.station (station_name,station_mac,station_slow_speed,station_run_speed) VALUES(%s,%s,%s,%s)""",(name,mac,slow,fast))
+        global lookBackTime
+        global lookBackDist
+        cur.execute("""INSERT INTO psproductivity.station (station_name,station_mac,station_lbt,station_lbd) VALUES(%s,%s,%s,%s)""",(name,mac,time,dist))
         pittsteel.commit()
         cur.execute("""SELECT station_lbt,station_lbd FROM psproductivity.station WHERE station_mac = %s;""",(mac,))
         rows2 = cur.fetchall()
@@ -54,12 +54,12 @@ def register(callmain):
         tk.Button(question, text='Submit', command = lambda:enterName(question,a.get(),b.get(),c.get())).pack()
         question.mainloop()
     else :
-        cur.execute("""SELECT station_slow_speed,station_run_speed FROM psproductivity.station WHERE station_mac = %s;""",(mac,))
-        global slowSpeed
-        global runSpeed
+        cur.execute("""SELECT station_lbt,station_lbd FROM psproductivity.station WHERE station_mac = %s;""",(mac,))
+        global lookBackTime
+        global lookBackDist
         rows2 = cur.fetchall()
-        slowSpeed = rows2[0][0]
-        runSpeed = rows2[0][1]
+        lookBackTime = rows2[0][0]
+        lookBackDist = rows2[0][1]
         setStationId(rows[0][0],callmain)
 
 
