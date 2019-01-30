@@ -22,7 +22,7 @@ def timeStep():
             # Get the current Time
             cTime = time.time()
             # Wait until the beginning of the next minute
-            time.sleep(10-(cTime%10))
+            time.sleep(1-(cTime%1))
             # Increment the Takt Keeper
             dsplay.timeInc()
     except KeyboardInterrupt:

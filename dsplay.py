@@ -201,14 +201,15 @@ def checkRunning(onMinute):
             if lastStopTime != 0: # Check to make sure that we have stopped today To avoid counting the time since 12AM
                 stopBase = stopBase + (currRunStart - lastStopTime) # add this stop to the sum of stop time
             lastStopTime = 0 # reset the last Stop Time
+            print(currRunStart)
             stoptimeVal = stopBase # Chage the display value
             runtimeVal = runBase + (time.time() - currRunStart) # change the running display to the run time plus the current run 
             runningVal.config(bg="green") # Color Change
             stopVal.config(bg="gray") #
-            insAct("Start",time.time()-(60*lookBackDist)) # Add A Start Time to the Database
+            insAct("Start",currRunStart) # Add A Start Time to the Database
 
-    runtime.set(str("%02d"%int(runtimeVal/3600))+":"+("%02d"%(runtimeVal/60))+":"+("%02d"%(runtimeVal%60))) # update display with proper values
-    stoptime.set(str("%02d"%int(stoptimeVal/3600))+":"+("%02d"%(stoptimeVal/60))+":"+("%02d"%(runtimeVal%60)))
+    runtime.set(str("%02d"%int(runtimeVal/3600))+":"+("%02d"%(runtimeVal%3600/60))+":"+("%02d"%(runtimeVal%60))) # update display with proper values
+    stoptime.set(str("%02d"%int(stoptimeVal/3600))+":"+("%02d"%(stoptimeVal%3600/60))+":"+("%02d"%(stoptimeVal%60)))
 
 def isStopped():
     global eatime
@@ -220,7 +221,7 @@ def isStopped():
 
     for x in l: # loop through the list. But we only look at the first one
         if x < time.time() - 60 * lookBackTime: # if the most recent stamp is older then (lookBackTime) minutes
-            lastStopTime = time.time() # set the stop here 
+            lastStopTime = x # set the stop here 
         return x < time.time() - 60 * lookBackTime # return if the most recent punch is too old to be running.
 
 def isRunning():
@@ -228,15 +229,17 @@ def isRunning():
     global lookBackDist
     global lookBackTime
     global currRunStart
+    global lookBackDist
     
-    count = 0 # count of the number of operations in the time window
+    count = 1 # count of the number of operations in the time window
     if(eatime.qsize() < lookBackDist): # if the queue of time stamps isnt long enough to determin a run
         return False; # return that the machine is not running
 
     l = list(eatime.queue) # turn the queue into a list
     l.sort(reverse=True) # sort from newst to oldest punches
 
-    for x in l: # Loop through the list 
+    for x in l: # Loop through the list
+        print(count, " ", lookBackDist)
         if count >= lookBackDist: # if count > = lookBackDist (The number of stamps that must fall in the time window)
             currRunStart = x # Set the start equal to the first stamp in the window 
             break # exit the loop
@@ -245,12 +248,12 @@ def isRunning():
         count = count + 1 # increment count by one for the matched time stamp
             
 
-    return count >= lookBackDistance  # return true of there are enough stamps in the time window
+    return count >= lookBackDist  # return true of there are enough stamps in the time window
 
 def addTaktToDB():
     global opmArray 
     
-    if ppmArray[1] != 0 and loctime == 0: # If there were parts produced last minute
+    if ppmArray[1] != 0: # If there were parts produced last minute
         insProdtakt(ppmArray[1], time.time() - 60) # insert the number of parts produced last mintute
 
 
