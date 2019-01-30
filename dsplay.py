@@ -3,7 +3,7 @@ import queue
 import RPi.GPIO as GPIO
 import threading
 import time
-#GPIO.setmode(GPIO.BCM)
+GPIO.setmode(GPIO.BCM)
 
 # Debouncer
 class ButtonHandler(threading.Thread):
