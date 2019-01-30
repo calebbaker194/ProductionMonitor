@@ -1,6 +1,6 @@
 from tkinter import *
 import queue
-#import RPi.GPIO as GPIO
+import RPi.GPIO as GPIO
 import threading
 import time
 #GPIO.setmode(GPIO.BCM)
@@ -15,7 +15,7 @@ class ButtonHandler(threading.Thread):
         self.pin = pin
         self.bouncetime = float(bouncetime)/1000
 
-#        self.lastpinval = GPIO.input(self.pin)
+        self.lastpinval = GPIO.input(self.pin)
         self.lock = threading.Lock()
 
     def __call__(self, *args):
@@ -26,7 +26,7 @@ class ButtonHandler(threading.Thread):
         t.start()
 
     def read(self, *args):
-#        pinval = GPIO.input(self.pin)
+        pinval = GPIO.input(self.pin)
 
         if (
                 ((pinval == 0 and self.lastpinval == 1) and
@@ -48,11 +48,11 @@ RESET_CNT_DI = 18
 INC_OP_CNT_DI = 12
 
 # This sets up the pins to pull down software and changes them to input
-#GPIO.setup(ACTION_DI, GPIO.IN, pull_up_down=GPIO.PUD_DOWN)
-#GPIO.setup(ADD_CNT_DI, GPIO.IN, pull_up_down=GPIO.PUD_DOWN)
-#GPIO.setup(DEC_CNT_DI, GPIO.IN, pull_up_down=GPIO.PUD_DOWN)
-#GPIO.setup(RESET_CNT_DI, GPIO.IN, pull_up_down=GPIO.PUD_DOWN)
-#GPIO.setup(INC_OP_CNT_DI, GPIO.IN, pull_up_down=GPIO.PUD_DOWN)
+GPIO.setup(ACTION_DI, GPIO.IN, pull_up_down=GPIO.PUD_DOWN)
+GPIO.setup(ADD_CNT_DI, GPIO.IN, pull_up_down=GPIO.PUD_DOWN)
+GPIO.setup(DEC_CNT_DI, GPIO.IN, pull_up_down=GPIO.PUD_DOWN)
+GPIO.setup(RESET_CNT_DI, GPIO.IN, pull_up_down=GPIO.PUD_DOWN)
+GPIO.setup(INC_OP_CNT_DI, GPIO.IN, pull_up_down=GPIO.PUD_DOWN)
 
 
 ## Program data and variables ##
@@ -343,28 +343,28 @@ def resetCount(val):
     countStr.set(count)
 
 # Event Handlers
-#opActionHandle = ButtonHandler(ACTION_DI, opAction, edge='rising', bouncetime=120)
-#opActionHandle.start()
+opActionHandle = ButtonHandler(ACTION_DI, opAction, edge='rising', bouncetime=120)
+opActionHandle.start()
 
-#countUpHandle = ButtonHandler(ADD_CNT_DI, countUp, edge='rising', bouncetime=100)
-#countUpHandle.start()
+countUpHandle = ButtonHandler(ADD_CNT_DI, countUp, edge='rising', bouncetime=100)
+countUpHandle.start()
 
-#countDownHandle = ButtonHandler(DEC_CNT_DI, countDown, edge='rising', bouncetime=100)
-#countDownHandle.start()
+countDownHandle = ButtonHandler(DEC_CNT_DI, countDown, edge='rising', bouncetime=100)
+countDownHandle.start()
 
-#resetCountHandle = ButtonHandler(RESET_CNT_DI, resetCount, edge='rising', bouncetime=100)
-#resetCountHandle.start()
+resetCountHandle = ButtonHandler(RESET_CNT_DI, resetCount, edge='rising', bouncetime=100)
+resetCountHandle.start()
 
-#incrementOpHandle = ButtonHandler(INC_OP_CNT_DI, incrementOp, edge='rising', bouncetime=100)
-#incrementOpHandle.start()
+incrementOpHandle = ButtonHandler(INC_OP_CNT_DI, incrementOp, edge='rising', bouncetime=100)
+incrementOpHandle.start()
 
 # This adds interrupts to all of the inputs so that they will trigger the
 # respected functions
-#GPIO.add_event_detect(ACTION_DI, GPIO.BOTH, callback=opActionHandle)
-#GPIO.add_event_detect(ADD_CNT_DI, GPIO.BOTH, callback=countUpHandle)
-#GPIO.add_event_detect(DEC_CNT_DI, GPIO.BOTH, callback=countDownHandle)
-#GPIO.add_event_detect(RESET_CNT_DI, GPIO.BOTH, callback=resetCountHandle)
-#GPIO.add_event_detect(INC_OP_CNT_DI, GPIO.BOTH, callback=incrementOpHandle)
+GPIO.add_event_detect(ACTION_DI, GPIO.BOTH, callback=opActionHandle)
+GPIO.add_event_detect(ADD_CNT_DI, GPIO.BOTH, callback=countUpHandle)
+GPIO.add_event_detect(DEC_CNT_DI, GPIO.BOTH, callback=countDownHandle)
+GPIO.add_event_detect(RESET_CNT_DI, GPIO.BOTH, callback=resetCountHandle)
+GPIO.add_event_detect(INC_OP_CNT_DI, GPIO.BOTH, callback=incrementOpHandle)
 
 # Show the main screen to check production
 def showProdScreen(activityIns, prodtaktIns):
@@ -456,13 +456,13 @@ def showProdScreen(activityIns, prodtaktIns):
     reset.pack()
 
     #TESTING#############################################################
-    testing = Tk()
-    testing.title("Input tester")
+    #testing = Tk()
+    #testing.title("Input tester")
 
-    ACTION_TI = Button(testing, text = "Action", command =lambda:opAction("test"), width = 15, font = ("Curier", 16)).pack()
-    ADD_CNT_TI = Button(testing, text = "Add Cnt", command =lambda:countUp("test"), width = 15, font = ("Curier", 16)).pack()
-    DEC_CNT_TI = Button(testing, text = "Dec Cnt", command =lambda:countDown("test"), width = 15, font = ("Curier", 16)).pack()
-    RESET_CNT_TI = Button(testing, text = "Reset Cnt", command =lambda:reset("test"), width = 15, font = ("Curier", 16)).pack()
-    INC_OP_CNT_TI = Button(testing, text = "Inc Op", command =lambda:incrementOp("test"), width = 15, font = ("Curier", 16)).pack()
+    #ACTION_TI = Button(testing, text = "Action", command =lambda:opAction("test"), width = 15, font = ("Curier", 16)).pack()
+    #ADD_CNT_TI = Button(testing, text = "Add Cnt", command =lambda:countUp("test"), width = 15, font = ("Curier", 16)).pack()
+    #DEC_CNT_TI = Button(testing, text = "Dec Cnt", command =lambda:countDown("test"), width = 15, font = ("Curier", 16)).pack()
+    #RESET_CNT_TI = Button(testing, text = "Reset Cnt", command =lambda:reset("test"), width = 15, font = ("Curier", 16)).pack()
+    #INC_OP_CNT_TI = Button(testing, text = "Inc Op", command =lambda:incrementOp("test"), width = 15, font = ("Curier", 16)).pack()
     #####################################################################
     root.mainloop()
