@@ -79,7 +79,7 @@ insAct = ()
 insProdtakt = ()
 
 # The last minute that this was called
-lastUpdate = int(time.time()/60)
+lastUpdate = int(time.time()%60)
 
 # The current status of the machine.
 # May not accurately reflect status for 5 minutes
@@ -91,6 +91,9 @@ frod = 0
 # How long we have been running today (in minutes)
 runtimeVal = 0
 
+#
+stoptimeVal = 0
+
 # how much time the last loockBackDist operations must occur in to be running
 lookBackTime = 0
 
@@ -99,6 +102,20 @@ lookBackDist = 0
 
 # the running speed threshold
 runSpeed = 0
+
+# Runtime = runBase + time.time() - currRunStart
+# on Stop: runBase = lastStopTime - currRunStart then currRunStart = 0
+# if running this will = the time the machine started running
+currRunStart = 0
+
+# the sum of all the run times not including the curr run time
+runBase = 0
+
+# this is the stop time to inserte into the database
+lastStopTime = 0
+
+# the sum of all stop times other then the current stop cycle
+stopBase = 0 
 
 # An array of time stamps that represent the part creations to calculate the takt time
 eatime= queue.Queue()
@@ -114,128 +131,154 @@ countStr = ()
 runningVal = ()
 stopVal = ()
 
-# Main logic of performance indication
+# Main logic of performance indication will occure every second to keep run time and stop time live
 def timeInc():
+
     global lastUpdate
-    if(lastUpdate != int(time.time()/60)):
-        lastUpdate = int(time.time()/60)
-        for x in range(24,0,-1):
+
+    if((int(time.time())%60)%15 == 0) # If the second is a multiple of 15
+        calcTakt() # refresh the takt time
+    
+    checkRunning((lastUpdate != int(time.time()%3600/60))) # Check running (True Or False) True if it is on the minute
+
+    if(lastUpdate != int(time.time()%3600/60)): # On the Minute 
+        lastUpdate = int(time.time()%3600/60) # Update the last time the Production was added
+        
+        for x in range(24,0,-1): # Shift the array of parts per minute and operations per minute down one
             ppmArray[x] = ppmArray[x-1]
             opmArray[x] = opmArray[x-1]
 
-        ppmArray[0] = 0
-        opmArray[0] = 0
-        checkRunning()
-        addTaktToDB(0)
-    else:
-        addTaktToDB(int(time.time()/60) % 60 )
+        ppmArray[0] = 0 # Set the current minute to 0
+        opmArray[0] = 0 #
 
-def checkRunning():
+        addTaktToDB() # Adds the parts produced to the database unless it == 0
+
+def checkRunning(onMinute):
+    
     global running
     global runtimeVal
     global stoptimeVal
     global lookBackDist
     global lookBackTime
+    global lastStopTime
     global frod
+    global currRunStart
+    global runBase
     global eatime
+    global stopBase
 
-    if(frod == 0 and ppmArray[1] > 0):
-        frod = int(time.time() / 86400)
+    if(frod == 0 and ppmArray[1] > 0): # If there has been no run today and parts were produced this minute.
+        frod = int(time.time() / 86400) # Set the first run of the day to today
 
-    if frod != 0:
-        if frod != int(time.time() / 86400):
-            frod = 0
+    if frod != 0: # If the machine has been run today
+        if frod != int(time.time() / 86400): # check to so see if the days match
+            frod = 0 # If the do not then set the program to no runs today And reset the running and stop counters
             runtimeVal = 0
+            runBase = 0
+            lastStopTime = 0
+            stopBase = 0
+            currRunStart = 0
             stoptimeVal = 0
 
-    if running:
-        runtimeVal = runtimeVal + 1
-        if(isStopped()):
-            running = False
-            eatime= queue.Queue()
-            runtimeVal = runtimeVal - (lookBackDist + 1)
-            stoptimeVal = stoptimeVal + lookBackDist
-            runningVal.config(bg="gray")
-            stopVal.config(bg="red")
-            insAct("Stop",time.time()-(60*lookBackDist))
-    else:
-        if frod != 0:
-            stoptimeVal = stoptimeVal +1
+    if running: # If the program is in the running state
+        runtimeVal = runBase + (time.time() - currRunStart) # update the run time to the currrent running time
+        if(isStopped()): # Check to see if the program is stopped and if it is set the lastSopTime
+            running = False # set the running flag to false
+            runBase = runBase + (lastStopTime - currRunStart) # Set run Base = to all the previous run times plus the current ending run time
+            eatime= queue.Queue() # reset the operation queue that calculates takt time
+            runtimeVal = runBase # Set the displayed runtime value to the correct run time
+            stoptimeVal = stopBase + (time.time() - lastStopTime) # set the stoptime value to the previus stops plus the current added stop
+            currRunStart = 0 # resest the start time of the current run to 0
+            runningVal.config(bg="gray") # change colors
+            stopVal.config(bg="red") #
+            insAct("Stop",lastStopTime) # Insert Stop Time in database
+    else: # If the program is in the stopped state
+        if frod != 0: # If there Has been a run today
+            stoptimeVal = stopBase + (time.time() - lastStopTime) # Update the Stop Time Displayed
             
-        if (isRunning()) :
-            running = True
-            stoptimeVal = stoptimeVal - (lookBackDist + 1)
-            runtimeVal = runtimeVal + lookBackDist
-            runningVal.config(bg="green")
-            stopVal.config(bg="gray")
-            insAct("Start",time.time()-(60*lookBackDist))
+        if (isRunning()) : # Check to see if the machine is running and set currRunStart if it is.
+            running = True # set running flag to True
+            if lastStopTime != 0: # Check to make sure that we have stopped today To avoid counting the time since 12AM
+                stopBase = stopBase + (currRunStart - lastStopTime) # add this stop to the sum of stop time
+            lastStopTime = 0 # reset the last Stop Time
+            stoptimeVal = stopBase # Chage the display value
+            runtimeVal = runBase + (time.time() - currRunStart) # change the running display to the run time plus the current run 
+            runningVal.config(bg="green") # Color Change
+            stopVal.config(bg="gray") #
+            insAct("Start",time.time()-(60*lookBackDist)) # Add A Start Time to the Database
 
-    runtime.set(str(int(runtimeVal/60))+":"+("%02d"%(runtimeVal%60)))
-    stoptime.set(str(int(stoptimeVal/60))+":"+("%02d"%(stoptimeVal%60)))
+    runtime.set(str("%02d"%int(runtimeVal/3600))+":"+("%02d"%(runtimeVal/60))+":"+("%02d"%(runtimeVal%60))) # update display with proper values
+    stoptime.set(str("%02d"%int(stoptimeVal/3600))+":"+("%02d"%(stoptimeVal/60))+":"+("%02d"%(runtimeVal%60)))
 
 def isStopped():
     global eatime
     global lookBackTime
-    l = list(eatime.queue)
-    l.sort(reverse=True)
+    global lastStopTime
+    
+    l = list(eatime.queue) # Take all the operation time stamps and put them in a list
+    l.sort(reverse=True) # sord the list most recent to oldest
 
-    for x in l:
-        return x < time.time() - 60 * lookBackTime
+    for x in l: # loop through the list. But we only look at the first one
+        if x < time.time() - 60 * lookBackTime: # if the most recent stamp is older then (lookBackTime) minutes
+            lastStopTime = time.time() # set the stop here 
+        return x < time.time() - 60 * lookBackTime # return if the most recent punch is too old to be running.
 
 def isRunning():
     global eatime
     global lookBackDist
     global lookBackTime
+    global currRunStart
     
-    count = 0
-    if(eatime.qsize() < lookBackDist):
-        return false;
+    count = 0 # count of the number of operations in the time window
+    if(eatime.qsize() < lookBackDist): # if the queue of time stamps isnt long enough to determin a run
+        return False; # return that the machine is not running
 
-    l = list(eatime.queue)
-    l.sort(reverse=True)
+    l = list(eatime.queue) # turn the queue into a list
+    l.sort(reverse=True) # sort from newst to oldest punches
 
-    for x in l:
-        if count >= lookBackDist:
-            break
-        if x < (time.time() - (lookBackTime * 60)):
-            return false
+    for x in l: # Loop through the list 
+        if count >= lookBackDist: # if count > = lookBackDist (The number of stamps that must fall in the time window)
+            currRunStart = x # Set the start equal to the first stamp in the window 
+            break # exit the loop
+        if x < (time.time() - (lookBackTime * 60)): # if the time stamp is older the the window
+            return False # return false
+        count = count + 1 # increment count by one for the matched time stamp
             
 
-    return true
+    return count >= lookBackDistance  # return true of there are enough stamps in the time window
 
-def addTaktToDB(loctime):
-    global opmArray
-
-    calcTakt()
-
-    if ppmArray[1] != 0 and loctime == 0:
-        insProdtakt(ppmArray[1], time.time() - 60)
+def addTaktToDB():
+    global opmArray 
+    
+    if ppmArray[1] != 0 and loctime == 0: # If there were parts produced last minute
+        insProdtakt(ppmArray[1], time.time() - 60) # insert the number of parts produced last mintute
 
 
 # Calc Takt time and display on the monitor also remove old times
 def calcTakt():
-    print("calc")
     global eatime
     global takt
-    l = []
-    sumtime = 0
-    oldesttime = time.time()
+    global lookBackTime
     
-    while eatime.qsize() > 0:
-        t = eatime.get()
-        if t < time.time()-60*60:
-            continue
-        else:
-            l.append(t)
-            sumtime = sumtime + 1
-            if oldesttime > t:
-                oldesttime = t
+    l = [] # the list to store elements the should be added back to the queue
+    sumtime = 0 # the sum of all the punches in the eatime queue
+    oldesttime = time.time() # find the oldest punch in the list
+    
+    while eatime.qsize() > 0: # while the queue has elements left
+        t = eatime.get() # set t equal to an elemnt that you remove from the queue
+        if t < time.time()-(60*lookBackTime): # if it is older then the lookBackTime in minutes then do nothing and dont re-add to the queue
+            continue # skip to next loop itereation
+        else: # if time stamp is in the lookBackTime window 
+            l.append(t) # add it back to the queue
+            sumtime = sumtime + 1 # add one to the sum
+            if oldesttime > t: # if t is older then the oldest time
+                oldesttime = t - 1 # set the oldest time to one second older then t.
+                # this will give me a more accurate average because it took some time to make the first punch
 
-    for e in l:
-        eatime.put(e)
-    average = sumtime/((time.time() - oldesttime)/60)
-    print(sumtime,"/((",time.time(),"-",oldesttime,")/60")
-    takt.set("{0:.2f} O/m".format(average))
+    for e in l: # For every element in l
+        eatime.put(e) # put that element back into the queue
+    average = sumtime/((time.time() - oldesttime)/60) # calculate the average takt
+    takt.set("{0:.2f} O/m".format(average)) # set the UI label
 
         
             
@@ -250,16 +293,16 @@ def opAction(val):
     global ppmArray
     global eatime
 
-    opmArray[0] = opmArray[0] + 1
+    opmArray[0] = opmArray[0] + 1 # add on the the operation per minute array
 
-    currentOp = currentOp + 1
-    op.set(str(currentOp)+"/"+str(opCnt))
-    if(currentOp == opCnt):
-        countUp("cnt")
-        ppmArray[0] = ppmArray[0] + 1
-        eatime.put(time.time())
-        calcTakt()
-        currentOp = 0
+    currentOp = currentOp + 1 # add one to the current opperation on this part
+    op.set(str(currentOp)+"/"+str(opCnt)) # set the Op UI label 
+    if(currentOp == opCnt): # if current operations is equal to the number of operations per part
+        countUp("cnt") # add one the the item count on screen
+        ppmArray[0] = ppmArray[0] + 1 # add one to the actual parts array
+        eatime.put(time.time()) # Add a time stamp for the current created part.
+        calcTakt() # calculat the takt
+        currentOp = 0 # reset the current operation to 0 for the next part
 
 # add one to the number of operations to produce an item
 def incrementOp(val):
@@ -370,10 +413,10 @@ def showProdScreen(activityIns, prodtaktIns):
     down = Button(right, text = "CntDown", command = lambda:countDown("oi"), width = 15, font = ("Curier", 16))
     reset = Button(right, text = "Reset", command = lambda:resetCount("oi"), width = 15, font = ("Curier", 16))
     runningLabel = Label(leftl, text = "Running",relief = RAISED, font= ("Curier", 20),width = 10)
-    runningVal = Label(leftr, textvariable = runtime,relief = RAISED,font = ("Curier", 20),width = 5)
+    runningVal = Label(leftr, textvariable = runtime,relief = RAISED,font = ("Curier", 20),width = 10)
     stopLabel = Label(leftl, text = "Stopped",relief = RAISED, font =("Curier", 20),width = 10)
-    stopVal = Label(leftr, textvariable = stoptime,relief = RAISED,font = ("Curier", 20),width = 5)
-    blankl = Label(leftr, text = " ",relief = RAISED, font =("Curier", 20),width = 5)
+    stopVal = Label(leftr, textvariable = stoptime,relief = RAISED,font = ("Curier", 20),width = 10)
+    blankl = Label(leftr, text = " ",relief = RAISED, font =("Curier", 20),width = 10)
     totall = Label(leftl, text = "Totals",relief = RAISED, font =("Curier", 20),width = 10)
     taktl = Label(topt, text = "TAKT", relief = RAISED, font =("Curier", 20), width = 10)
     eal = Label(topt, text = "OP/EA", relief = RAISED, font =("Curier", 20), width = 10)
