@@ -136,7 +136,7 @@ def timeInc():
 
     global lastUpdate
 
-    if((int(time.time())%60)%15 == 0) # If the second is a multiple of 15
+    if((int(time.time())%60)%15 == 0):# If the second is a multiple of 15
         calcTakt() # refresh the takt time
     
     checkRunning((lastUpdate != int(time.time()%3600/60))) # Check running (True Or False) True if it is on the minute
