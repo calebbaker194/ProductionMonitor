@@ -280,7 +280,7 @@ def calcTakt():
 
     for e in l: # For every element in l
         eatime.put(e) # put that element back into the queue
-    average = sumtime-1/((time.time() - oldesttime)/60) # calculate the average takt
+    average = (sumtime-1)/((time.time() - oldesttime)/60) # calculate the average takt
     takt.set("{0:.2f} O/m".format(average)) # set the UI label
 
         
