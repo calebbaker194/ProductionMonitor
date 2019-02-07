@@ -130,6 +130,7 @@ op = ()
 countStr = ()
 runningVal = ()
 stopVal = ()
+efficiency = ()
 
 # Main logic of performance indication will occure every second to keep run time and stop time live
 def timeInc():
@@ -166,6 +167,7 @@ def checkRunning(onMinute):
     global runBase
     global eatime
     global stopBase
+    global efficiency
 
     if(frod == 0 and ppmArray[1] > 0): # If there has been no run today and parts were produced this minute.
         frod = int(time.time() / 86400) # Set the first run of the day to today
@@ -208,6 +210,7 @@ def checkRunning(onMinute):
             stopVal.config(bg="gray") #
             insAct("Start",currRunStart) # Add A Start Time to the Database
 
+    efficiency.set(str("%02d"%(int(runtimeVal/stoptimeVal)*100)))
     runtime.set(str("%02d"%int(runtimeVal/3600))+":"+("%02d"%(runtimeVal%3600/60))+":"+("%02d"%(runtimeVal%60))) # update display with proper values
     stoptime.set(str("%02d"%int(stoptimeVal/3600))+":"+("%02d"%(stoptimeVal%3600/60))+":"+("%02d"%(stoptimeVal%60)))
 
@@ -384,6 +387,7 @@ def showProdScreen(activityIns, prodtaktIns):
     global runtime
     global runningVal
     global stopVal
+    global efficiency
     # This is the main screen
     root = Tk()
     root.title("Production")
@@ -394,6 +398,7 @@ def showProdScreen(activityIns, prodtaktIns):
     runtime = StringVar()
     stoptime = StringVar()
     op = StringVar()
+    efficiency = StringVar()
 
     # Set base labels for the operator interface.
     takt.set("0.0/min")
@@ -419,6 +424,8 @@ def showProdScreen(activityIns, prodtaktIns):
     runningVal = Label(leftr, textvariable = runtime,relief = RAISED,font = ("Curier", 20),width = 10)
     stopLabel = Label(leftl, text = "Stopped",relief = RAISED, font =("Curier", 20),width = 10)
     stopVal = Label(leftr, textvariable = stoptime,relief = RAISED,font = ("Curier", 20),width = 10)
+    efficiencyLabel = Label(leftl, text="Efficiency", relief = RAISED, font = ("Curier", 20),width = 10)
+    efficiencyVal = Label(leftr, textvariable = efficiency,relief = RAISED,font = ("Curier", 20),width = 10)
     blankl = Label(leftr, text = " ",relief = RAISED, font =("Curier", 20),width = 10)
     totall = Label(leftl, text = "Totals",relief = RAISED, font =("Curier", 20),width = 10)
     taktl = Label(topt, text = "TAKT", relief = RAISED, font =("Curier", 20), width = 10)
@@ -432,12 +439,12 @@ def showProdScreen(activityIns, prodtaktIns):
     stopVal.config(bg="gray")
 
     # Adding Widgets and frames all together
-    taktVal.pack(side = LEFT );
-    operationVal.pack(side = LEFT);
-    countVal.pack(side = LEFT);
-    taktl.pack(side = LEFT );
-    eal.pack(side = LEFT);
-    countl.pack(side = LEFT);
+    taktVal.pack(side = LEFT )
+    operationVal.pack(side = LEFT)
+    countVal.pack(side = LEFT)
+    taktl.pack(side = LEFT )
+    eal.pack(side = LEFT)
+    countl.pack(side = LEFT)
     top.pack(side = TOP)
     left.pack(side = LEFT)
     leftl.pack(side = LEFT)
@@ -451,6 +458,8 @@ def showProdScreen(activityIns, prodtaktIns):
     runningVal.pack()
     stopLabel.pack()
     stopVal.pack()
+    efficiencyLabel.pack()
+    efficiencyVal.pack()
     up.pack()
     down.pack()
     reset.pack()
