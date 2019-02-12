@@ -429,7 +429,8 @@ def showProdScreen(activityIns, prodtaktIns):
     efficiencyLabel = Label(leftl, text="Efficiency", relief = RAISED, font = ("Curier", 20),width = 10)
     efficiencyVal = Label(leftr, textvariable = efficiency,relief = RAISED,font = ("Curier", 20),width = 10)
     blankl = Label(leftr, text = " ",relief = RAISED, font =("Curier", 20),width = 10)
-    totall = Label(leftl, text = "Totals",relief = RAISED, font =("Curier", 20),width = 10)
+    blankl2 = Label(leftr, text = " ",relief = RAISED, font =("Curier", 20),width = 15)
+    totall = Label(right, text = "Totals",relief = RAISED, font =("Curier", 20),width = 10)
     taktl = Label(topt, text = "TAKT", relief = RAISED, font =("Curier", 20), width = 10)
     eal = Label(topt, text = "OP/EA", relief = RAISED, font =("Curier", 20), width = 10)
     countl = Label(topt, text = "Count", relief = RAISED, font =("Curier", 20), width = 10)
@@ -465,6 +466,7 @@ def showProdScreen(activityIns, prodtaktIns):
     up.pack()
     down.pack()
     reset.pack()
+    blankl2.pack()
 
     #TESTING#############################################################
     #testing = Tk()
