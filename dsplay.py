@@ -271,6 +271,10 @@ def calcTakt():
     l = [] # the list to store elements the should be added back to the queue
     sumtime = 0 # the sum of all the punches in the eatime queue
     oldesttime = time.time() # find the oldest punch in the list
+
+    if eatime.qsize() == 0:
+        takt.set("{0:.2f} /min".format(0))
+        return;
     
     while eatime.qsize() > 0: # while the queue has elements left
         t = eatime.get() # set t equal to an elemnt that you remove from the queue
@@ -286,7 +290,7 @@ def calcTakt():
     for e in l: # For every element in l
         eatime.put(e) # put that element back into the queue
     average = (sumtime-1)/((time.time() - oldesttime)/60) # calculate the average takt
-    takt.set("{0:.2f} O/m".format(average)) # set the UI label
+    takt.set("{0:.2f} /min".format(average)) # set the UI label
 
         
             
@@ -429,8 +433,8 @@ def showProdScreen(activityIns, prodtaktIns):
     efficiencyLabel = Label(leftl, text="Efficiency", relief = RAISED, font = ("Curier", 20),width = 10)
     efficiencyVal = Label(leftr, textvariable = efficiency,relief = RAISED,font = ("Curier", 20),width = 10)
     blankl = Label(leftr, text = " ",relief = RAISED, font =("Curier", 20),width = 10)
-    blankl2 = Label(leftr, text = " ",relief = RAISED, font =("Curier", 20),width = 15)
-    totall = Label(right, text = "Totals",relief = RAISED, font =("Curier", 20),width = 10)
+    blankl2 = Label(right, text = " ",relief = RAISED, font =("Curier", 20),width = 15)
+    totall = Label(leftr, text = "Totals",relief = RAISED, font =("Curier", 20),width = 10)
     taktl = Label(topt, text = "TAKT", relief = RAISED, font =("Curier", 20), width = 10)
     eal = Label(topt, text = "OP/EA", relief = RAISED, font =("Curier", 20), width = 10)
     countl = Label(topt, text = "Count", relief = RAISED, font =("Curier", 20), width = 10)
