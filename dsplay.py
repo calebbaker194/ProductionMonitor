@@ -1,9 +1,10 @@
 from tkinter import *
+from tkinter import ttk
 import queue
 import RPi.GPIO as GPIO
 import threading
 import time
-import ttk
+
 GPIO.setmode(GPIO.BCM)
 
 # Debouncer
