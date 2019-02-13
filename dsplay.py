@@ -4,7 +4,12 @@ import queue
 import RPi.GPIO as GPIO
 import threading
 import time
-
+import matplotlib
+matplotlib.use("TkAgg")
+from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg, NavigationToolbar2TkAgg
+from matplotlib.figure import Figure
+import matplotlib.animation as animation
+from matplotlib import style
 GPIO.setmode(GPIO.BCM)
 
 # Debouncer
@@ -120,7 +125,27 @@ lastStopTime = 0
 stopBase = 0 
 
 # An array of time stamps that represent the part creations to calculate the takt time
-eatime= queue.Queue()
+eatime = queue.Queue()
+
+# Data For the graphs
+graphXData = queue.Queue()
+
+graphYData = queue.Queue()
+
+for tempcnt in range (600): # set the distance back the graph looks in seconds
+    graphXData.put(0)
+    graphYData.put(0)
+
+graphFigure = ()
+
+# Store the last checked takt time
+lastTakt = 0
+
+#
+taktval = 0
+
+# The variable for the graph in the graphing screen
+graph = ()
 
 ################################
 
@@ -170,6 +195,16 @@ def checkRunning(onMinute):
     global eatime
     global stopBase
     global efficiency
+    global lastTakt
+    global taktval
+    global graphXData
+    global graphYData
+
+    lastTakt = lastTakt + (.1*(taktval - lastTakt))
+    graphXDate.put(round(time.time()))
+    graphXData.get()
+    graphYData.put(lastTakt)
+    graphYData.get()
 
     if(frod == 0 and ppmArray[1] > 0): # If there has been no run today and parts were produced this minute.
         frod = int(time.time() / 86400) # Set the first run of the day to today
@@ -231,6 +266,10 @@ def isStopped():
             lastStopTime = x # set the stop here 
         return x < time.time() - 60 * lookBackTime # return if the most recent punch is too old to be running.
 
+def animate(objData):
+    graph.plot(graphXData, graphYData)
+    
+
 def isRunning():
     global eatime
     global lookBackDist
@@ -269,6 +308,7 @@ def calcTakt():
     global eatime
     global takt
     global lookBackTime
+    global taktval
     
     l = [] # the list to store elements the should be added back to the queue
     sumtime = 0 # the sum of all the punches in the eatime queue
@@ -292,6 +332,7 @@ def calcTakt():
     for e in l: # For every element in l
         eatime.put(e) # put that element back into the queue
     average = (sumtime-1)/((time.time() - oldesttime)/60) # calculate the average takt
+    taktval = average
     takt.set("{0:.2f} /min".format(average)) # set the UI label
 
         
@@ -383,6 +424,7 @@ def showProdScreen(activityIns, prodtaktIns):
     global insAct
     global insProdtakt
     global slowSpeed
+    global graph
     global runSpeed
 
     insAct = activityIns
@@ -396,7 +438,7 @@ def showProdScreen(activityIns, prodtaktIns):
     global runningVal
     global stopVal
     global efficiency
-    # This is the main screen
+    # This is root container 
     root = Tk()
     root.title("Production")
 
@@ -405,6 +447,8 @@ def showProdScreen(activityIns, prodtaktIns):
         root.rowconfigure(rowst, weight = 1)
         root.columnconfigure(rowst, weight = 1)
         rowst += 1
+
+    # Set up tabbed navigation
 
     tabBar = ttk.Notebook(root)
     tabBar.grid(row=1, column=0, columnspan=10, rowspan=49, sticky='NESW')
@@ -416,6 +460,8 @@ def showProdScreen(activityIns, prodtaktIns):
     tabBar.add(monitorTab, text="Monitor")
     tabBar.add(graphTab, text="History")
     tabBar.add(schedTab, text="Schedule")
+
+    ########## BEGIN MONITOR TAB #####################################
 
     # Set base labels for the operator interface.
     takt = StringVar()
@@ -440,7 +486,7 @@ def showProdScreen(activityIns, prodtaktIns):
     leftl = Frame(left)
     leftr = Frame(left)
     right = Frame(monitorTab)
-
+    
     # Creating Button and label widgets
     up = Button(right, text = "AddCnt", command = lambda:countUp("oi"), width = 15, font = ("Curier", 16))
     down = Button(right, text = "CntDown", command = lambda:countDown("oi"), width = 15, font = ("Curier", 16))
@@ -491,6 +537,23 @@ def showProdScreen(activityIns, prodtaktIns):
     reset.pack()
     blankl2.pack()
 
+
+    ########## END MONITOR TAB   #####################################
+
+    ########## BEGIN HISTORY TAB #####################################
+
+    global graphFigure
+
+    graphFigure = Figure(figsize=(5,5), dpi=100)
+    graph = graphFigure.add_subplot(111)
+    graph.plot([1,2,3,4,5,6],[1,1,2,3,3,4])
+
+    canvas = FigureCanvasTkAgg(f, graphTab)
+    canvas.show()
+    canvas.get_tk_widget().pack(side=tk.BOTTOM, fill=tk.BOTH, expand=True)
+
+    ########## END HISTORY TAB   #####################################
+
     #TESTING#############################################################
     #testing = Tk()
     #testing.title("Input tester")
@@ -501,4 +564,5 @@ def showProdScreen(activityIns, prodtaktIns):
     #RESET_CNT_TI = Button(testing, text = "Reset Cnt", command =lambda:reset("test"), width = 15, font = ("Curier", 16)).pack()
     #INC_OP_CNT_TI = Button(testing, text = "Inc Op", command =lambda:incrementOp("test"), width = 15, font = ("Curier", 16)).pack()
     #####################################################################
+    ani = animation.FuncAnimation(graphFigure,animate,interval=1000)
     root.mainloop()
