@@ -3,6 +3,7 @@ import queue
 import RPi.GPIO as GPIO
 import threading
 import time
+import ttk
 GPIO.setmode(GPIO.BCM)
 
 # Debouncer
@@ -398,6 +399,23 @@ def showProdScreen(activityIns, prodtaktIns):
     root = Tk()
     root.title("Production")
 
+    rowst = 0
+    while rowst < 10:
+        root.rowconfigure(rowst, weight = 1)
+        root.columnconfigure(rowst, weight = 1)
+        rowst += 1
+
+    tabBar = ttk.Notebook(root)
+    tabBar.grid(row=1, column=0, columnspan=10, rowspan=49, stickey='NESW')
+
+    monitorTab = ttk.Frame(tabBar)
+    graphTab = ttk.Frame(tabBar)
+    schedTab = ttk.Frame(tabBar)
+
+    tabBar.add(monitorTab, text="Monitor")
+    tabBar.add(graphTab, text="History")
+    tabBar.add(schedTab, text="Schedule")
+
     # Set base labels for the operator interface.
     takt = StringVar()
     countStr = StringVar()
@@ -414,13 +432,13 @@ def showProdScreen(activityIns, prodtaktIns):
     op.set("0/1")
 
     # Simple Frames for organizing the widgets
-    top = Frame(root)
+    top = Frame(monitorTab)
     topt = Frame(top)
     topb = Frame(top)
-    left = Frame(root)
+    left = Frame(monitorTab)
     leftl = Frame(left)
     leftr = Frame(left)
-    right = Frame(root)
+    right = Frame(monitorTab)
 
     # Creating Button and label widgets
     up = Button(right, text = "AddCnt", command = lambda:countUp("oi"), width = 15, font = ("Curier", 16))
