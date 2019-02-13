@@ -267,6 +267,7 @@ def isStopped():
         return x < time.time() - 60 * lookBackTime # return if the most recent punch is too old to be running.
 
 def animate(objData):
+    graph.clear()
     graph.plot(graphXData, graphYData)
     
 
@@ -548,9 +549,8 @@ def showProdScreen(activityIns, prodtaktIns):
     graph = graphFigure.add_subplot(111)
     graph.plot([1,2,3,4,5,6],[1,1,2,3,3,4])
 
-    canvas = FigureCanvasTkAgg(f, graphTab)
-    canvas.show()
-    canvas.get_tk_widget().pack(side=tk.BOTTOM, fill=tk.BOTH, expand=True)
+    canvas = FigureCanvasTkAgg(graphFigure, graphTab)
+    canvas.get_tk_widget().pack(side=BOTTOM, fill=BOTH, expand=True)
 
     ########## END HISTORY TAB   #####################################
 
