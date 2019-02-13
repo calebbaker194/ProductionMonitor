@@ -6,7 +6,7 @@ import threading
 import time
 import matplotlib
 matplotlib.use("TkAgg")
-from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg, NavigationToolbar2TkAgg
+from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg, NavigationToolbar2Tk
 from matplotlib.figure import Figure
 import matplotlib.animation as animation
 from matplotlib import style
@@ -201,7 +201,8 @@ def checkRunning(onMinute):
     global graphYData
 
     lastTakt = lastTakt + (.1*(taktval - lastTakt))
-    graphXDate.put(round(time.time()))
+    
+    graphXData.put(matplotlib.dates.epoch2num(time.time()))
     graphXData.get()
     graphYData.put(lastTakt)
     graphYData.get()
@@ -268,7 +269,7 @@ def isStopped():
 
 def animate(objData):
     graph.clear()
-    graph.plot(graphXData, graphYData)
+    graph.plot(list(graphXData.queue), list(graphYData.queue))
     
 
 def isRunning():
