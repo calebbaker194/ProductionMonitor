@@ -407,7 +407,7 @@ def showProdScreen(activityIns, prodtaktIns):
         rowst += 1
 
     tabBar = ttk.Notebook(root)
-    tabBar.grid(row=1, column=0, columnspan=10, rowspan=49, stickey='NESW')
+    tabBar.grid(row=1, column=0, columnspan=10, rowspan=49, sticky='NESW')
 
     monitorTab = ttk.Frame(tabBar)
     graphTab = ttk.Frame(tabBar)
