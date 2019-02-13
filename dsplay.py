@@ -133,7 +133,7 @@ graphXData = queue.Queue()
 graphYData = queue.Queue()
 
 for tempcnt in range (600): # set the distance back the graph looks in seconds
-    graphXData.put(0)
+    graphXData.put(matplotlib.dates.epoch2num(time.time()-(600-tmpcnt)))
     graphYData.put(0)
 
 graphFigure = ()
@@ -269,7 +269,7 @@ def isStopped():
 
 def animate(objData):
     graph.clear()
-    graph.plot(list(graphXData.queue), list(graphYData.queue))
+    graph.plot_dates(list(graphXData.queue), list(graphYData.queue))
     
 
 def isRunning():
@@ -548,7 +548,7 @@ def showProdScreen(activityIns, prodtaktIns):
 
     graphFigure = Figure(figsize=(5,5), dpi=100)
     graph = graphFigure.add_subplot(111)
-    graph.plot([1,2,3,4,5,6],[1,1,2,3,3,4])
+    graph.xaxis.set_major_formatter(mdate.DateFormatter('%H:%M:%S'))
 
     canvas = FigureCanvasTkAgg(graphFigure, graphTab)
     canvas.get_tk_widget().pack(side=BOTTOM, fill=BOTH, expand=True)
