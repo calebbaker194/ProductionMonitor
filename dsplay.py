@@ -265,8 +265,9 @@ def checkRunning(onMinute):
             runningVal.config(bg="green") # Color Change
             stopVal.config(bg="gray") #
             insAct("Start",currRunStart) # Add A Start Time to the Database
+
     if stoptimeVal > 0:
-        efficiency.set(str("%02d"%(int(runtimeVal/stoptimeVal)*100))+"%")
+        efficiency.set(str("%01d"%(int(runtimeVal/stoptimeVal*100)))+"%")
     else:
         efficiency.set("00%")
     runtime.set(str("%02d"%int(runtimeVal/3600))+":"+("%02d"%(runtimeVal%3600/60))+":"+("%02d"%(runtimeVal%60))) # update display with proper values
