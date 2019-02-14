@@ -289,7 +289,7 @@ def isStopped():
         return x < time.time() - 60 * lookBackTime # return if the most recent punch is too old to be running.
 
 def animate(objData):
-    graph.plot(list(graphXData.queue), list(graphYData.queue))
+    graph.plot(list(graphXData.queue), list(graphYData.queue), 'C3')
     
 
 def isRunning():
