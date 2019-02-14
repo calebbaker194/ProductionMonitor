@@ -1,8 +1,16 @@
 from tkinter import *
+from tkinter import ttk
 import queue
 import RPi.GPIO as GPIO
 import threading
 import time
+import matplotlib
+matplotlib.use("TkAgg")
+from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg, NavigationToolbar2Tk
+from matplotlib.figure import Figure
+import matplotlib.animation as animation
+import matplotlib.dates as mdate
+from matplotlib import style
 GPIO.setmode(GPIO.BCM)
 
 # Debouncer
@@ -67,10 +75,20 @@ opCnt = 1
 currentOp = 0
 
 # Parts per minute Array
-ppmArray=[0] * 25
+ppmArray= queue.Queue()
 
 # operations Per minute Array
-opmArray=[0] * 25
+opmArray= queue.Queue()
+
+for popx in range(25):
+    ppmArray.put(0)
+    opmArray.put(0)
+
+# Parts In the current Minute
+ppmCnt = 0
+
+# Operations in the current Minute
+opmCnt = 0
 
 # call to add activity into db
 insAct = ()
@@ -118,7 +136,27 @@ lastStopTime = 0
 stopBase = 0 
 
 # An array of time stamps that represent the part creations to calculate the takt time
-eatime= queue.Queue()
+eatime = queue.Queue()
+
+# Data For the graphs
+graphXData = queue.Queue()
+
+graphYData = queue.Queue()
+
+for tmpcnt in range (600): # set the distance back the graph looks in seconds
+    graphXData.put(matplotlib.dates.epoch2num(time.time()-(600-tmpcnt)))
+    graphYData.put(0)
+
+graphFigure = ()
+
+# Store the last checked takt time
+lastTakt = 0
+
+#
+taktval = 0
+
+# The variable for the graph in the graphing screen
+graph = ()
 
 ################################
 
@@ -136,23 +174,31 @@ efficiency = ()
 def timeInc():
 
     global lastUpdate
+    global ppmCnt
+    global opmCnt
 
-    if((int(time.time())%60)%15 == 0):# If the second is a multiple of 15
+    onminute = (lastUpdate != int(time.time()%3600/60))
+
+    if((int(time.time())%60)%10 == 0):# If the second is a multiple of 10
         calcTakt() # refresh the takt time
     
-    checkRunning((lastUpdate != int(time.time()%3600/60))) # Check running (True Or False) True if it is on the minute
+    checkRunning(onminute) # Check running (True Or False) True if it is on the minute
 
-    if(lastUpdate != int(time.time()%3600/60)): # On the Minute 
-        lastUpdate = int(time.time()%3600/60) # Update the last time the Production was added
-        
-        for x in range(24,0,-1): # Shift the array of parts per minute and operations per minute down one
-            ppmArray[x] = ppmArray[x-1]
-            opmArray[x] = opmArray[x-1]
-
-        ppmArray[0] = 0 # Set the current minute to 0
-        opmArray[0] = 0 #
+    if(onminute): # On the Minute
 
         addTaktToDB() # Adds the parts produced to the database unless it == 0
+        
+        lastUpdate = int(time.time()%3600/60) # Update the last time the Production was added
+        
+        ppmArray.put(ppmCnt)
+        opmArray.put(opmCnt)
+        opmArray.get()
+        ppmArray.get()
+
+        ppmCnt = 0 # Set the current minute to 0
+        opmCnt = 0 # 
+
+        
 
 def checkRunning(onMinute):
     
@@ -168,8 +214,19 @@ def checkRunning(onMinute):
     global eatime
     global stopBase
     global efficiency
+    global lastTakt
+    global taktval
+    global graphXData
+    global graphYData
 
-    if(frod == 0 and ppmArray[1] > 0): # If there has been no run today and parts were produced this minute.
+    lastTakt = lastTakt + (.1*(taktval - lastTakt))
+    
+    graphXData.put(matplotlib.dates.epoch2num(time.time()))
+    graphXData.get()
+    graphYData.put(lastTakt)
+    graphYData.get()
+
+    if(frod == 0 and list(ppmArray.queue)[1] > 0): # If there has been no run today and parts were produced this minute.
         frod = int(time.time() / 86400) # Set the first run of the day to today
 
     if frod != 0: # If the machine has been run today
@@ -203,14 +260,14 @@ def checkRunning(onMinute):
             if lastStopTime != 0: # Check to make sure that we have stopped today To avoid counting the time since 12AM
                 stopBase = stopBase + (currRunStart - lastStopTime) # add this stop to the sum of stop time
             lastStopTime = 0 # reset the last Stop Time
-            print(currRunStart)
             stoptimeVal = stopBase # Chage the display value
             runtimeVal = runBase + (time.time() - currRunStart) # change the running display to the run time plus the current run 
             runningVal.config(bg="green") # Color Change
             stopVal.config(bg="gray") #
             insAct("Start",currRunStart) # Add A Start Time to the Database
+
     if stoptimeVal > 0:
-        efficiency.set(str("%02d"%(int(runtimeVal/stoptimeVal)*100))+"%")
+        efficiency.set(str("%01d"%(int(runtimeVal/stoptimeVal*100)))+"%")
     else:
         efficiency.set("00%")
     runtime.set(str("%02d"%int(runtimeVal/3600))+":"+("%02d"%(runtimeVal%3600/60))+":"+("%02d"%(runtimeVal%60))) # update display with proper values
@@ -229,6 +286,10 @@ def isStopped():
             lastStopTime = x # set the stop here 
         return x < time.time() - 60 * lookBackTime # return if the most recent punch is too old to be running.
 
+def animate(objData):
+    graph.plot(list(graphXData.queue), list(graphYData.queue))
+    
+
 def isRunning():
     global eatime
     global lookBackDist
@@ -244,7 +305,6 @@ def isRunning():
     l.sort(reverse=True) # sort from newst to oldest punches
 
     for x in l: # Loop through the list
-        print(count, " ", lookBackDist)
         if count >= lookBackDist: # if count > = lookBackDist (The number of stamps that must fall in the time window)
             currRunStart = x # Set the start equal to the first stamp in the window 
             break # exit the loop
@@ -256,10 +316,10 @@ def isRunning():
     return count >= lookBackDist  # return true of there are enough stamps in the time window
 
 def addTaktToDB():
-    global opmArray 
+    global ppmCnt 
     
-    if ppmArray[1] != 0: # If there were parts produced last minute
-        insProdtakt(ppmArray[1], time.time() - 60) # insert the number of parts produced last mintute
+    if ppmCnt != 0: # If there were parts produced last minute
+        insProdtakt(ppmCnt, time.time() - 60) # insert the number of parts produced last mintute
 
 
 # Calc Takt time and display on the monitor also remove old times
@@ -267,6 +327,7 @@ def calcTakt():
     global eatime
     global takt
     global lookBackTime
+    global taktval
     
     l = [] # the list to store elements the should be added back to the queue
     sumtime = 0 # the sum of all the punches in the eatime queue
@@ -290,6 +351,7 @@ def calcTakt():
     for e in l: # For every element in l
         eatime.put(e) # put that element back into the queue
     average = (sumtime-1)/((time.time() - oldesttime)/60) # calculate the average takt
+    taktval = average
     takt.set("{0:.2f} /min".format(average)) # set the UI label
 
         
@@ -298,20 +360,20 @@ def calcTakt():
 # Fire when an operation occurs
 def opAction(val):
     global currentOp
-    global opmArray
+    global opmCnt
     global running
     global op
     global opCnt
-    global ppmArray
+    global ppmCnt
     global eatime
-
-    opmArray[0] = opmArray[0] + 1 # add on the the operation per minute array
+    
+    opmCnt = opmCnt + 1 # add on the the operation per minute array
 
     currentOp = currentOp + 1 # add one to the current opperation on this part
     op.set(str(currentOp)+"/"+str(opCnt)) # set the Op UI label 
     if(currentOp == opCnt): # if current operations is equal to the number of operations per part
         countUp("cnt") # add one the the item count on screen
-        ppmArray[0] = ppmArray[0] + 1 # add one to the actual parts array
+        ppmCnt = ppmCnt + 1 # add one to the actual parts array
         eatime.put(time.time()) # Add a time stamp for the current created part.
         calcTakt() # calculat the takt
         currentOp = 0 # reset the current operation to 0 for the next part
@@ -338,7 +400,6 @@ def countUp(val):
 def countDown(val):
     global count
     global countStr
-    global ppmArray
     count = count - 1
     if(count < 0):
         count = 0
@@ -381,6 +442,7 @@ def showProdScreen(activityIns, prodtaktIns):
     global insAct
     global insProdtakt
     global slowSpeed
+    global graph
     global runSpeed
 
     insAct = activityIns
@@ -394,9 +456,30 @@ def showProdScreen(activityIns, prodtaktIns):
     global runningVal
     global stopVal
     global efficiency
-    # This is the main screen
+    # This is root container 
     root = Tk()
     root.title("Production")
+
+    rowst = 0
+    while rowst < 10:
+        root.rowconfigure(rowst, weight = 1)
+        root.columnconfigure(rowst, weight = 1)
+        rowst += 1
+
+    # Set up tabbed navigation
+
+    tabBar = ttk.Notebook(root)
+    tabBar.grid(row=1, column=0, columnspan=10, rowspan=49, sticky='NESW')
+
+    monitorTab = ttk.Frame(tabBar)
+    graphTab = ttk.Frame(tabBar)
+    schedTab = ttk.Frame(tabBar)
+
+    tabBar.add(monitorTab, text="Monitor")
+    tabBar.add(graphTab, text="History")
+    tabBar.add(schedTab, text="Schedule")
+
+    ########## BEGIN MONITOR TAB #####################################
 
     # Set base labels for the operator interface.
     takt = StringVar()
@@ -414,14 +497,14 @@ def showProdScreen(activityIns, prodtaktIns):
     op.set("0/1")
 
     # Simple Frames for organizing the widgets
-    top = Frame(root)
+    top = Frame(monitorTab)
     topt = Frame(top)
     topb = Frame(top)
-    left = Frame(root)
+    left = Frame(monitorTab)
     leftl = Frame(left)
     leftr = Frame(left)
-    right = Frame(root)
-
+    right = Frame(monitorTab)
+    
     # Creating Button and label widgets
     up = Button(right, text = "AddCnt", command = lambda:countUp("oi"), width = 15, font = ("Curier", 16))
     down = Button(right, text = "CntDown", command = lambda:countDown("oi"), width = 15, font = ("Curier", 16))
@@ -472,6 +555,26 @@ def showProdScreen(activityIns, prodtaktIns):
     reset.pack()
     blankl2.pack()
 
+
+    ########## END MONITOR TAB    ####################################
+
+    ########## BEGIN HISTORY TAB  ####################################
+
+    global graphFigure
+
+    graphFigure = Figure(figsize=(5,5), dpi=100)
+    graph = graphFigure.add_subplot(111)
+    graph.xaxis.set_major_formatter(mdate.DateFormatter('%H:%M'))
+    graph.xaxis_date()
+    canvas = FigureCanvasTkAgg(graphFigure, graphTab)
+    canvas.get_tk_widget().pack(side=BOTTOM, fill=BOTH, expand=True)
+
+    ########## END HISTORY TAB    ####################################
+
+    ########## BEGIN SCHEDULE TAB ####################################
+    
+    ########## END SCHEDULE TAB   ####################################
+
     #TESTING#############################################################
     #testing = Tk()
     #testing.title("Input tester")
@@ -482,4 +585,7 @@ def showProdScreen(activityIns, prodtaktIns):
     #RESET_CNT_TI = Button(testing, text = "Reset Cnt", command =lambda:reset("test"), width = 15, font = ("Curier", 16)).pack()
     #INC_OP_CNT_TI = Button(testing, text = "Inc Op", command =lambda:incrementOp("test"), width = 15, font = ("Curier", 16)).pack()
     #####################################################################
+    
+    ani = animation.FuncAnimation(graphFigure,animate,interval=1000)
+    
     root.mainloop()
