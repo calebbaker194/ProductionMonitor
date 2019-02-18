@@ -158,6 +158,9 @@ taktval = 0
 # The variable for the graph in the graphing screen
 graph = ()
 
+# The tree in to display the schedule
+tree = ()
+
 ################################
 
 # Variables For the Labels in the operator interface
@@ -414,6 +417,10 @@ def resetCount(val):
     count = 0
     countStr.set(count)
 
+def scheduleRefresh(pgCall):
+    print("refresh schedule")
+    pgCall()
+
 # Event Handlers
 opActionHandle = ButtonHandler(ACTION_DI, opAction, edge='rising', bouncetime=120)
 opActionHandle.start()
@@ -439,7 +446,7 @@ GPIO.add_event_detect(RESET_CNT_DI, GPIO.BOTH, callback=resetCountHandle)
 GPIO.add_event_detect(INC_OP_CNT_DI, GPIO.BOTH, callback=incrementOpHandle)
 
 # Show the main screen to check production
-def showProdScreen(activityIns, prodtaktIns):
+def showProdScreen(activityIns, prodtaktIns, updateSched, updateWork):
 
     global insAct
     global insProdtakt
@@ -458,6 +465,8 @@ def showProdScreen(activityIns, prodtaktIns):
     global runningVal
     global stopVal
     global efficiency
+    global tree
+    
     # This is root container 
     root = Tk()
     root.title("Production")
@@ -574,6 +583,27 @@ def showProdScreen(activityIns, prodtaktIns):
     ########## END HISTORY TAB    ####################################
 
     ########## BEGIN SCHEDULE TAB ####################################
+
+    # Creating Button and label widgets
+
+    schedTop = Frame(schedTab)
+    schedBot = Frame(schedTab)
+    schedTop.pack(side = TOP)
+    schedBot.pack(fill=BOTH, expand=1)
+    
+    tree = ttk.Treeview(schedBot)
+    tree["columns"] = ("Work Order","Item Description","Count")
+    tree.column("Work Order", width=80)
+    tree.column("Item Description", width=250)
+    tree.column("Count", width=80, anchor="e")
+    tree.heading("Work Order", text="Work Order")
+    tree.heading("Item Description", text="Item Description")
+    tree.heading("Count", text="Count")
+    tree['show'] = 'headings'
+    tree.pack(fill=BOTH, expand=1)
+    
+    refreshSched = Button(schedTab, text = "Refresh", command = lambda:updateSched(tree), width = 15, font = ("Curier", 16))
+    refreshSched.pack()
     
     ########## END SCHEDULE TAB   ####################################
 
