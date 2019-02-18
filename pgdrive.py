@@ -77,3 +77,21 @@ def insertprodtakt(takt, takttime):
     cur.execute("""INSERT INTO psproductivity.prodtakt (prodtakt_start,prodtakt_takt,prodtakt_station_id) VALUES(to_timestamp(%s), %s, %s)""",(takttime,takt,station_id))
     pittsteel.commit()
 
+def getSched(treeview):
+    global station_id
+    cur.execute("""
+    SELECT pswosched_id, wo_number, item_descrip1, pswosched_submit || '/' || pswosched_request
+    FROM psproductivity.pswosched
+    JOIN wo ON(wo_id = pswosched_woitem_id)
+    JOIN itemsite ON (wo_itemsite_id = itemsite_id)
+    JOIN item ON (itemsite_item_id = item_id)
+    WHERE pswosched_station_id = %s
+    ORDER BY pswosched_priority
+    """,(station_id,))
+
+    for row in cur:
+        treeview.insert('', 'end', iid=row[0], values=(row[1], row[2], row[3]))
+
+def updateWork(woitem_id, qty):
+    global station_id
+    print("Thanks for the update")
