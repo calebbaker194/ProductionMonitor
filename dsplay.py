@@ -60,15 +60,11 @@ DEC_CNT_DI = 27
 RESET_CNT_DI = 18
 INC_OP_CNT_DI = 12
 
-# This sets up the pins to pull down software and changes them to input
-GPIO.setup(ACTION_DI, GPIO.IN, pull_up_down=GPIO.PUD_DOWN)
-GPIO.setup(ADD_CNT_DI, GPIO.IN, pull_up_down=GPIO.PUD_DOWN)
-GPIO.setup(DEC_CNT_DI, GPIO.IN, pull_up_down=GPIO.PUD_DOWN)
-GPIO.setup(RESET_CNT_DI, GPIO.IN, pull_up_down=GPIO.PUD_DOWN)
-GPIO.setup(INC_OP_CNT_DI, GPIO.IN, pull_up_down=GPIO.PUD_DOWN)
-
 
 ## Program data and variables ##
+
+# Race No More
+IsConfig = False
 
 # Number of parts cut
 count = 0
@@ -470,6 +466,13 @@ def showProdScreen():
     DEC_CNT_DI = pgdrive.DEC_CNT_di
     RESET_CNT_DI = pgdrive.RESET_CNT_di
     INC_OP_CNT_DI = pgdrive.INC_OP_CNT_di
+
+    # This sets up the pins to pull down software and changes them to input
+    GPIO.setup(ACTION_DI, GPIO.IN, pull_up_down=GPIO.PUD_DOWN)
+    GPIO.setup(ADD_CNT_DI, GPIO.IN, pull_up_down=GPIO.PUD_DOWN)
+    GPIO.setup(DEC_CNT_DI, GPIO.IN, pull_up_down=GPIO.PUD_DOWN)
+    GPIO.setup(RESET_CNT_DI, GPIO.IN, pull_up_down=GPIO.PUD_DOWN)
+    GPIO.setup(INC_OP_CNT_DI, GPIO.IN, pull_up_down=GPIO.PUD_DOWN)
     
     # Event Handlers
     opActionHandle = ButtonHandler(ACTION_DI, opAction, edge='rising', bouncetime=120)
@@ -640,14 +643,14 @@ def showProdScreen():
     ########## END SCHEDULE TAB   ####################################
 
     #TESTING#############################################################
-    testing = Tk()
-    testing.title("Input tester")
-
-    ACTION_TI = Button(testing, text = "Action", command =lambda:opAction("test"), width = 15, font = ("Curier", 16)).pack()
-    ADD_CNT_TI = Button(testing, text = "Add Cnt", command =lambda:countUp("test"), width = 15, font = ("Curier", 16)).pack()
-    DEC_CNT_TI = Button(testing, text = "Dec Cnt", command =lambda:countDown("test"), width = 15, font = ("Curier", 16)).pack()
-    RESET_CNT_TI = Button(testing, text = "Reset Cnt", command =lambda:reset("test"), width = 15, font = ("Curier", 16)).pack()
-    INC_OP_CNT_TI = Button(testing, text = "Inc Op", command =lambda:incrementOp("test"), width = 15, font = ("Curier", 16)).pack()
+    #testing = Tk()
+    #testing.title("Input tester")
+    #
+    #ACTION_TI = Button(testing, text = "Action", command =lambda:opAction("test"), width = 15, font = ("Curier", 16)).pack()
+    #ADD_CNT_TI = Button(testing, text = "Add Cnt", command =lambda:countUp("test"), width = 15, font = ("Curier", 16)).pack()
+    #DEC_CNT_TI = Button(testing, text = "Dec Cnt", command =lambda:countDown("test"), width = 15, font = ("Curier", 16)).pack()
+    #RESET_CNT_TI = Button(testing, text = "Reset Cnt", command =lambda:reset("test"), width = 15, font = ("Curier", 16)).pack()
+    #INC_OP_CNT_TI = Button(testing, text = "Inc Op", command =lambda:incrementOp("test"), width = 15, font = ("Curier", 16)).pack()
     #####################################################################
     
     # Start Up recovery.
@@ -662,7 +665,8 @@ def showProdScreen():
         runningVal.config(bg="green") # Color Change
         stopVal.config(bg="gray") #
         
-
+    global IsConfig
+    IsConfig = True
     ani = animation.FuncAnimation(graphFigure,animate,interval=1000)
     
     root.mainloop()

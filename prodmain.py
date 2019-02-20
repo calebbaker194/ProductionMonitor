@@ -9,6 +9,8 @@ def dbIsRegister():
     print("Starting ProdScreen")
     t2 = Thread(target = dsplay.showProdScreen)
     t2.start()
+    while not(dsplay.IsConfig):
+        time.sleep(1)
     print("Entering Main Loop")
     t1 = Thread(target = timeStep)
     t1.start()
