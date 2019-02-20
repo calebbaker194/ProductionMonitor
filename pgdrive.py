@@ -1,8 +1,8 @@
 import psycopg2
 from uuid import getnode as get_mac
 import tkinter as tk
-lookBackTime = 0
-lookBackDist = 0
+LBT = 0
+LBD = 0
 mac = get_mac()
 pittsteel = psycopg2.connect("dbname=PittSteel host=192.168.2.3 user=caleb password=tori")
 
@@ -27,14 +27,14 @@ def register(callmain):
     rows = cur.fetchall()
     def enterName(rwin,name,time,dist):
         global pittsteel
-        global lookBackTime
-        global lookBackDist
+        global LBT
+        global LBD
         cur.execute("""INSERT INTO psproductivity.station (station_name,station_mac,station_lbt,station_lbd) VALUES(%s,%s,%s,%s)""",(name,mac,time,dist))
         pittsteel.commit()
         cur.execute("""SELECT station_lbt,station_lbd FROM psproductivity.station WHERE station_mac = %s;""",(mac,))
         rows2 = cur.fetchall()
-        lookBackTime = rows2[0][0]
-        lookBackDist = rows2[0][1]
+        LBT = rows2[0][0]
+        LBD = rows2[0][1]
         nonlocal callmain
         rwin.destroy()
         setStationId(-1,callmain)
@@ -55,11 +55,11 @@ def register(callmain):
         question.mainloop()
     else :
         cur.execute("""SELECT station_lbt,station_lbd FROM psproductivity.station WHERE station_mac = %s;""",(mac,))
-        global lookBackTime
-        global lookBackDist
+        global LBT
+        global LBD
         rows2 = cur.fetchall()
-        lookBackTime = rows2[0][0]
-        lookBackDist = rows2[0][1]
+        LBT = rows2[0][0]
+        LBD = rows2[0][1]
         setStationId(rows[0][0],callmain)
 
 

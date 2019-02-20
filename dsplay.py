@@ -1,6 +1,7 @@
 from tkinter import *
 from tkinter import ttk
 import queue
+import pgdrive
 import RPi.GPIO as GPIO
 import threading
 import time
@@ -47,6 +48,10 @@ class ButtonHandler(threading.Thread):
         self.lastpinval = pinval
         self.lock.release()
 
+# Start up
+def register(callback):
+    pgdrive.register(callback)
+
 # The following are all of the input pin numbers using I think the bcm numbering
 # This will be all the inputs for the program.
 ACTION_DI = 17
@@ -89,12 +94,6 @@ ppmCnt = 0
 
 # Operations in the current Minute
 opmCnt = 0
-
-# call to add activity into db
-insAct = ()
-
-# call to add prodtack into db
-insProdtakt = ()
 
 # The last minute that this was called
 lastUpdate = int(time.time()%60)
@@ -253,7 +252,7 @@ def checkRunning(onMinute):
             currRunStart = 0 # resest the start time of the current run to 0
             runningVal.config(bg="gray") # change colors
             stopVal.config(bg="red") #
-            insAct("Stop",lastStopTime) # Insert Stop Time in database
+            pgdrive.insertActivity("Stop",lastStopTime) # Insert Stop Time in database
     else: # If the program is in the stopped state
         if frod != 0: # If there Has been a run today
             stoptimeVal = stopBase + (time.time() - lastStopTime) # Update the Stop Time Displayed
@@ -267,7 +266,7 @@ def checkRunning(onMinute):
             runtimeVal = runBase + (time.time() - currRunStart) # change the running display to the run time plus the current run 
             runningVal.config(bg="green") # Color Change
             stopVal.config(bg="gray") #
-            insAct("Start",currRunStart) # Add A Start Time to the Database
+            pgdrive.insertActivity("Start",currRunStart) # Add A Start Time to the Database
 
     if stoptimeVal > 0:
         efficiency.set(str("%01d"%(int(runtimeVal/(stoptimeVal+runtimeVal)*100)))+"%")
@@ -324,7 +323,7 @@ def addTaktToDB():
     global ppmCnt 
     
     if ppmCnt != 0: # If there were parts produced last minute
-        insProdtakt(ppmCnt, time.time() - 60) # insert the number of parts produced last mintute
+        pgdrive.insertprodtakt(ppmCnt, time.time() - 60) # insert the number of parts produced last mintute
 
 
 # Calc Takt time and display on the monitor also remove old times
@@ -446,17 +445,11 @@ GPIO.add_event_detect(RESET_CNT_DI, GPIO.BOTH, callback=resetCountHandle)
 GPIO.add_event_detect(INC_OP_CNT_DI, GPIO.BOTH, callback=incrementOpHandle)
 
 # Show the main screen to check production
-def showProdScreen(activityIns, prodtaktIns, updateSched, updateWork):
+def showProdScreen():
 
-    global insAct
-    global insProdtakt
     global slowSpeed
     global graph
     global runSpeed
-
-    insAct = activityIns
-    insProdtakt = prodtaktIns
-
     global takt
     global op
     global countStr
@@ -466,6 +459,11 @@ def showProdScreen(activityIns, prodtaktIns, updateSched, updateWork):
     global stopVal
     global efficiency
     global tree
+    global lookBackTime
+    global lookBackDist
+
+    lookBackTime = pgdrive.LBT
+    lookBackDist = pgdrive.LBD
     
     # This is root container 
     root = Tk()
@@ -602,7 +600,7 @@ def showProdScreen(activityIns, prodtaktIns, updateSched, updateWork):
     tree['show'] = 'headings'
     tree.pack(fill=BOTH, expand=1)
     
-    refreshSched = Button(schedTab, text = "Refresh", command = lambda:updateSched(tree), width = 15, font = ("Curier", 16))
+    refreshSched = Button(schedTab, text = "Refresh", command = lambda:pgdrive.getSched(tree), width = 15, font = ("Curier", 16))
     refreshSched.pack()
     
     ########## END SCHEDULE TAB   ####################################

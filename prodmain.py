@@ -1,5 +1,4 @@
 import dsplay
-import pgdrive
 import time
 from threading import Thread
 
@@ -8,9 +7,7 @@ running = True
 def dbIsRegister():
     global running
     print("Starting ProdScreen")
-    t2 = Thread(target = dsplay.showProdScreen, args=(pgdrive.insertActivity,pgdrive.insertprodtakt,pgdrive.getSched,pgdrive.updateWork))
-    dsplay.lookBackTime = pgdrive.lookBackTime
-    dsplay.lookBackDist = pgdrive.lookBackDist
+    t2 = Thread(target = dsplay.showProdScreen)
     t2.start()
     print("Entering Main Loop")
     t1 = Thread(target = timeStep)
@@ -28,5 +25,5 @@ def timeStep():
     except KeyboardInterrupt:
         pass
 
-pgdrive.register(dbIsRegister)
+dsplay.register(dbIsRegister)
 
