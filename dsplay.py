@@ -148,6 +148,10 @@ for tmpcnt in range (600): # set the distance back the graph looks in seconds
 
 graphFigure = ()
 
+
+# The count of the passed minutes since the last save
+minutes = -1
+
 # Store the last checked takt time
 lastTakt = 0
 
@@ -200,7 +204,15 @@ def timeInc():
         ppmCnt = 0 # Set the current minute to 0
         opmCnt = 0 # 
 
-        
+
+def saveData(): # Saves the last known running time in case of powerloss. 
+    dfile = open("data", "w")
+    dfile.write(time.time())
+    dfile.close()
+
+def loadLastRecord():
+    dfile = open("data", "r")
+    return float(dfile.read())
 
 def checkRunning(onMinute):
     
@@ -220,6 +232,7 @@ def checkRunning(onMinute):
     global taktval
     global graphXData
     global graphYData
+    global minutes
 
     lastTakt = lastTakt + (.1*(taktval - lastTakt))
     
@@ -243,6 +256,10 @@ def checkRunning(onMinute):
 
     if running: # If the program is in the running state
         runtimeVal = runBase + (time.time() - currRunStart) # update the run time to the currrent running time
+        if onMinute:
+            minutes = (minutes + 1) % 5
+            if minutes == 0:
+                saveData()
         if(isStopped()): # Check to see if the program is stopped and if it is set the lastSopTime
             running = False # set the running flag to false
             runBase = runBase + (lastStopTime - currRunStart) # Set run Base = to all the previous run times plus the current ending run time
@@ -420,33 +437,10 @@ def scheduleRefresh(pgCall):
     print("refresh schedule")
     pgCall()
 
-# Event Handlers
-opActionHandle = ButtonHandler(ACTION_DI, opAction, edge='rising', bouncetime=120)
-opActionHandle.start()
-
-countUpHandle = ButtonHandler(ADD_CNT_DI, countUp, edge='rising', bouncetime=100)
-countUpHandle.start()
-
-countDownHandle = ButtonHandler(DEC_CNT_DI, countDown, edge='rising', bouncetime=100)
-countDownHandle.start()
-
-resetCountHandle = ButtonHandler(RESET_CNT_DI, resetCount, edge='rising', bouncetime=100)
-resetCountHandle.start()
-
-incrementOpHandle = ButtonHandler(INC_OP_CNT_DI, incrementOp, edge='rising', bouncetime=100)
-incrementOpHandle.start()
-
-# This adds interrupts to all of the inputs so that they will trigger the
-# respected functions
-GPIO.add_event_detect(ACTION_DI, GPIO.BOTH, callback=opActionHandle)
-GPIO.add_event_detect(ADD_CNT_DI, GPIO.BOTH, callback=countUpHandle)
-GPIO.add_event_detect(DEC_CNT_DI, GPIO.BOTH, callback=countDownHandle)
-GPIO.add_event_detect(RESET_CNT_DI, GPIO.BOTH, callback=resetCountHandle)
-GPIO.add_event_detect(INC_OP_CNT_DI, GPIO.BOTH, callback=incrementOpHandle)
-
 # Show the main screen to check production
 def showProdScreen():
 
+    global running
     global slowSpeed
     global graph
     global runSpeed
@@ -455,13 +449,53 @@ def showProdScreen():
     global countStr
     global stoptime
     global runtime
+    global runBase
     global runningVal
     global stopVal
     global efficiency
     global tree
     global lookBackTime
     global lookBackDist
+    global currRunStart
+    global eatime
+    
+    global ACTION_DI
+    global ADD_CNT_DI
+    global DEC_CNT_DI
+    global RESET_CNT_DI
+    global INC_OP_CNT_DI
 
+    ACTION_DI = pgdrive.ACTION_di
+    ADD_CNT_DI = pgdrive.ADD_CNT_di
+    DEC_CNT_DI = pgdrive.DEC_CNT_di
+    RESET_CNT_DI = pgdrive.RESET_CNT_di
+    INC_OP_CNT_DI = pgdrive.INC_OP_CNT_di
+    
+    # Event Handlers
+    opActionHandle = ButtonHandler(ACTION_DI, opAction, edge='rising', bouncetime=120)
+    opActionHandle.start()
+
+    countUpHandle = ButtonHandler(ADD_CNT_DI, countUp, edge='rising', bouncetime=100)
+    countUpHandle.start()
+
+    countDownHandle = ButtonHandler(DEC_CNT_DI, countDown, edge='rising', bouncetime=100)
+    countDownHandle.start()
+
+    resetCountHandle = ButtonHandler(RESET_CNT_DI, resetCount, edge='rising', bouncetime=100)
+    resetCountHandle.start()
+
+    incrementOpHandle = ButtonHandler(INC_OP_CNT_DI, incrementOp, edge='rising', bouncetime=100)
+    incrementOpHandle.start()
+
+    # This adds interrupts to all of the inputs so that they will trigger the
+    # respected functions
+    GPIO.add_event_detect(ACTION_DI, GPIO.BOTH, callback=opActionHandle)
+    GPIO.add_event_detect(ADD_CNT_DI, GPIO.BOTH, callback=countUpHandle)
+    GPIO.add_event_detect(DEC_CNT_DI, GPIO.BOTH, callback=countDownHandle)
+    GPIO.add_event_detect(RESET_CNT_DI, GPIO.BOTH, callback=resetCountHandle)
+    GPIO.add_event_detect(INC_OP_CNT_DI, GPIO.BOTH, callback=incrementOpHandle)
+
+    # Set up look back time and distance
     lookBackTime = pgdrive.LBT
     lookBackDist = pgdrive.LBD
     
@@ -606,16 +640,29 @@ def showProdScreen():
     ########## END SCHEDULE TAB   ####################################
 
     #TESTING#############################################################
-    #testing = Tk()
-    #testing.title("Input tester")
+    testing = Tk()
+    testing.title("Input tester")
 
-    #ACTION_TI = Button(testing, text = "Action", command =lambda:opAction("test"), width = 15, font = ("Curier", 16)).pack()
-    #ADD_CNT_TI = Button(testing, text = "Add Cnt", command =lambda:countUp("test"), width = 15, font = ("Curier", 16)).pack()
-    #DEC_CNT_TI = Button(testing, text = "Dec Cnt", command =lambda:countDown("test"), width = 15, font = ("Curier", 16)).pack()
-    #RESET_CNT_TI = Button(testing, text = "Reset Cnt", command =lambda:reset("test"), width = 15, font = ("Curier", 16)).pack()
-    #INC_OP_CNT_TI = Button(testing, text = "Inc Op", command =lambda:incrementOp("test"), width = 15, font = ("Curier", 16)).pack()
+    ACTION_TI = Button(testing, text = "Action", command =lambda:opAction("test"), width = 15, font = ("Curier", 16)).pack()
+    ADD_CNT_TI = Button(testing, text = "Add Cnt", command =lambda:countUp("test"), width = 15, font = ("Curier", 16)).pack()
+    DEC_CNT_TI = Button(testing, text = "Dec Cnt", command =lambda:countDown("test"), width = 15, font = ("Curier", 16)).pack()
+    RESET_CNT_TI = Button(testing, text = "Reset Cnt", command =lambda:reset("test"), width = 15, font = ("Curier", 16)).pack()
+    INC_OP_CNT_TI = Button(testing, text = "Inc Op", command =lambda:incrementOp("test"), width = 15, font = ("Curier", 16)).pack()
     #####################################################################
     
+    # Start Up recovery.
+    # This will allow a power off to not destroy the dataset
+    trun, truntime = pgdrive.launchConfig(loadLastRecord)
+
+    if trun:
+        runBase = time.time()-truntime
+        currRunStart = time.time()
+        eatime.put(time.time())
+        running = True
+        runningVal.config(bg="green") # Color Change
+        stopVal.config(bg="gray") #
+        
+
     ani = animation.FuncAnimation(graphFigure,animate,interval=1000)
     
     root.mainloop()

@@ -1,7 +1,14 @@
 import psycopg2
 from uuid import getnode as get_mac
 import tkinter as tk
+import time
+ACTION_di = 17
+ADD_CNT_di = 5
+DEC_CNT_di = 27
+RESET_CNT_di = 18
+INC_OP_CNT_di = 12
 LBT = 0
+station_name = ""
 LBD = 0
 mac = get_mac()
 pittsteel = psycopg2.connect("dbname=PittSteel host=192.168.2.3 user=caleb password=tori")
@@ -29,7 +36,7 @@ def register(callmain):
         global pittsteel
         global LBT
         global LBD
-        cur.execute("""INSERT INTO psproductivity.station (station_name,station_mac,station_lbt,station_lbd) VALUES(%s,%s,%s,%s)""",(name,mac,time,dist))
+        cur.execute("""INSERT INTO psproductivity.station (station_name,station_mac,station_lbt,station_lbd,action,addcnt,deccnt,resetcnt,incop) VALUES(%s,%s,%s,%s,%s,%s,%s,%s,%s)""",(name,mac,time,dist,17,5,27,18,12))
         pittsteel.commit()
         cur.execute("""SELECT station_lbt,station_lbd FROM psproductivity.station WHERE station_mac = %s;""",(mac,))
         rows2 = cur.fetchall()
@@ -42,6 +49,7 @@ def register(callmain):
 
     if(len(rows) == 0):
         question = tk.Tk()
+        question.title("Configure")
         tk.Label(question, text = 'Enter Station Name').pack()
         a = tk.Entry(question)
         a.pack()
@@ -54,10 +62,23 @@ def register(callmain):
         tk.Button(question, text='Submit', command = lambda:enterName(question,a.get(),b.get(),c.get())).pack()
         question.mainloop()
     else :
-        cur.execute("""SELECT station_lbt,station_lbd FROM psproductivity.station WHERE station_mac = %s;""",(mac,))
+        global station_name
+        station_name = rows[0][1]
+        cur.execute("""SELECT station_lbt,station_lbd,action,addcnt,deccnt,resetcnt,incop FROM psproductivity.station WHERE station_mac = %s;""",(mac,))
         global LBT
         global LBD
+        global ACTION_di
+        global ADD_CNT_di
+        global DEC_CNT_di
+        global RESET_CNT_di
+        global INC_OP_CNT_di
+        
         rows2 = cur.fetchall()
+        ACTION_di = rows2[0][2]
+        ADD_CNT_di = rows2[0][3]
+        DEC_CNT_di = rows2[0][4]
+        RESET_CNT_di = rows2[0][5]
+        INC_OP_CNT_di = rows2[0][6]
         LBT = rows2[0][0]
         LBD = rows2[0][1]
         setStationId(rows[0][0],callmain)
@@ -95,3 +116,22 @@ def getSched(treeview):
 def updateWork(woitem_id, qty):
     global station_id
     print("Thanks for the update")
+
+def launchConfig(lastRecord):
+    cur.execute("""
+    SELECT activity_type, activity_time FROM psproductivity.activity
+    WHERE activity_station_id = %s ORDER BY activity_time DESC LIMIT 1""",(station_id,))
+    rrunning = False
+    rStartTime = 0
+
+    for row in cur:
+        if(row[0] == 'Start'):
+            ttime  = lastRecord()
+            if(time.time() - ttime < LBT * 60): # It hasnt been too long just pick up the last running time and set it to running 
+                rrunning =True
+                rstartTime = row[1]
+            else:
+                insertActivity('Stop',ttime) # Otherwise give us a nice stop for the last time it was runnning
+        break
+
+    return rrunning, rStartTime
