@@ -203,7 +203,7 @@ def timeInc():
 
 def saveData(): # Saves the last known running time in case of powerloss. 
     dfile = open("data", "w")
-    dfile.write(time.time())
+    dfile.write(str(time.time()))
     dfile.close()
 
 def loadLastRecord():
