@@ -160,6 +160,9 @@ graph = ()
 # The tree in to display the schedule
 tree = ()
 
+# Tells weather there is a change in the array or not
+isUnderMod = False
+
 ################################
 
 # Variables For the Labels in the operator interface
@@ -229,13 +232,16 @@ def checkRunning(onMinute):
     global graphXData
     global graphYData
     global minutes
-
-    lastTakt = lastTakt + (.1*(taktval - lastTakt))
+    global isUnderMod
     
+    lastTakt = lastTakt + (.1*(taktval - lastTakt))
+
+    isUnderMod = True
     graphXData.put(matplotlib.dates.epoch2num(time.time()))
     graphXData.get()
     graphYData.put(lastTakt)
     graphYData.get()
+    isUnderMod = False
 
     if(frod == 0 and list(ppmArray.queue)[1] > 0): # If there has been no run today and parts were produced this minute.
         frod = int(time.time() / 86400) # Set the first run of the day to today
@@ -304,6 +310,12 @@ def isStopped():
         return x < time.time() - 60 * lookBackTime # return if the most recent punch is too old to be running.
 
 def animate(objData):
+    global isUnderMod
+    graph.clear()
+    graph.xaxis.set_major_formatter(mdate.DateFormatter('%H:%M'))
+    graph.xaxis_date()
+    while isUnderMod:
+        time.sleep(.001)
     graph.plot(list(graphXData.queue), list(graphYData.queue), 'C3')
     
 
@@ -667,6 +679,6 @@ def showProdScreen():
         
     global IsConfig
     IsConfig = True
-    ani = animation.FuncAnimation(graphFigure,animate,interval=1000)
+    ani = animation.FuncAnimation(graphFigure,animate,interval=5000)
     
     root.mainloop()

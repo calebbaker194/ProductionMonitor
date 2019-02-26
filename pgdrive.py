@@ -87,14 +87,14 @@ def register(callmain):
 def insertActivity(actType, actTime):
     global station_id
     global pittsteel
-    print("Activity "+actType)
+
     cur.execute("""INSERT INTO psproductivity.activity (activity_type,activity_time,activity_station_id) VALUES(%s,to_timestamp(%s), %s)""",(actType, actTime ,station_id))
     pittsteel.commit()
 
 def insertprodtakt(takt, takttime):
     global station_id
     global pittsteel
-    print("Takt ",takt)
+    
     cur.execute("""INSERT INTO psproductivity.prodtakt (prodtakt_start,prodtakt_takt,prodtakt_station_id) VALUES(to_timestamp(%s), %s, %s)""",(takttime,takt,station_id))
     pittsteel.commit()
 
@@ -115,7 +115,7 @@ def getSched(treeview):
 
 def updateWork(woitem_id, qty):
     global station_id
-    print("Thanks for the update")
+    
 
 def launchConfig(lastRecord):
     cur.execute("""
