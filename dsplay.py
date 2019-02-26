@@ -670,7 +670,7 @@ def showProdScreen():
     trun, truntime = pgdrive.launchConfig(loadLastRecord)
 
     if trun:
-        runBase = time.time()-truntime
+        runBase = time.time()-truntime.timestamp()
         currRunStart = time.time()
         eatime.put(time.time())
         running = True

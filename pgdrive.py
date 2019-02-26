@@ -129,7 +129,7 @@ def launchConfig(lastRecord):
             ttime  = lastRecord()
             if(time.time() - ttime < LBT * 60): # It hasnt been too long just pick up the last running time and set it to running 
                 rrunning =True
-                rstartTime = row[1]
+                rStartTime = row[1]
             else:
                 insertActivity('Stop',ttime) # Otherwise give us a nice stop for the last time it was runnning
         break
