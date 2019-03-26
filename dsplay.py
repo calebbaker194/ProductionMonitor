@@ -12,8 +12,9 @@ from matplotlib.figure import Figure
 import matplotlib.animation as animation
 import matplotlib.dates as mdate
 from matplotlib import style
+import pyautogui
 GPIO.setmode(GPIO.BCM)
-
+pyautogui.FAILSAFE=False
 # Debouncer
 class ButtonHandler(threading.Thread):
     def __init__(self, pin, func, edge='both', bouncetime=150):
@@ -62,6 +63,9 @@ INC_OP_CNT_DI = 12
 
 
 ## Program data and variables ##
+
+# root variable for tkinter
+root = ()
 
 # Race No More
 IsConfig = False
@@ -163,6 +167,9 @@ tree = ()
 # Tells weather there is a change in the array or not
 isUnderMod = False
 
+# This is the method for closing the main loo[
+main_close = ()
+
 ################################
 
 # Variables For the Labels in the operator interface
@@ -204,14 +211,27 @@ def timeInc():
         opmCnt = 0 # 
 
 
-def saveData(): # Saves the last known running time in case of powerloss. 
+def saveData(): # Saves the last known running time in case of powerloss.
+    global runBase
+    global stopBase
+    global currRunStart
+    global efficiency
+    global count
+    
     dfile = open("data", "w")
-    dfile.write(str(time.time()))
+    dfile.write(str(time.time())+"\n") # last know running time
+    dfile.write(str((runBase+(time.time()-currRunStart)))+"\n") # runbase Plus current run time
+    dfile.write(str(stopBase)+"\n") # stop base at the last know running time
+    dfile.write(str(count)) # The count at the time of the last save.
     dfile.close()
 
 def loadLastRecord():
     dfile = open("data", "r")
-    return float(dfile.read())
+    return float(dfile.readline())
+
+def loadAllData():
+    dfile = open("data", "r")
+    return float(dfile.readline()), float(dfile.readline()), float(dfile.readline()), int(dfile.readline())
 
 def checkRunning(onMinute):
     
@@ -243,7 +263,7 @@ def checkRunning(onMinute):
     graphYData.get()
     isUnderMod = False
 
-    if(frod == 0 and list(ppmArray.queue)[1] > 0): # If there has been no run today and parts were produced this minute.
+    if(frod == 0 and list(ppmArray.queue)[1] > 0): # If there has not run today and parts were produced this minute.
         frod = int(time.time() / 86400) # Set the first run of the day to today
 
     if frod != 0: # If the machine has been run today
@@ -259,9 +279,7 @@ def checkRunning(onMinute):
     if running: # If the program is in the running state
         runtimeVal = runBase + (time.time() - currRunStart) # update the run time to the currrent running time
         if onMinute:
-            minutes = (minutes + 1) % 5
-            if minutes == 0:
-                saveData()
+            saveData()
         if(isStopped()): # Check to see if the program is stopped and if it is set the lastSopTime
             running = False # set the running flag to false
             runBase = runBase + (lastStopTime - currRunStart) # Set run Base = to all the previous run times plus the current ending run time
@@ -293,6 +311,7 @@ def checkRunning(onMinute):
         efficiency.set("100%")
     else:
         efficiency.set("0%")
+        
     runtime.set(str("%02d"%int(runtimeVal/3600))+":"+("%02d"%(runtimeVal%3600/60))+":"+("%02d"%(runtimeVal%60))) # update display with proper values
     stoptime.set(str("%02d"%int(stoptimeVal/3600))+":"+("%02d"%(stoptimeVal%3600/60))+":"+("%02d"%(stoptimeVal%60)))
 
@@ -395,6 +414,9 @@ def opAction(val):
     global opCnt
     global ppmCnt
     global eatime
+
+    pyautogui.moveTo(0,0)
+    pyautogui.moveTo(0,1)
     
     opmCnt = opmCnt + 1 # add on the the operation per minute array
 
@@ -441,6 +463,18 @@ def resetCount(val):
     count = 0
     countStr.set(count)
 
+# Close the program out completely
+def on_close():
+
+    global main_close
+    global root
+    
+    main_close()
+    time.sleep(1)
+    root.destroy()
+    GPIO.cleanup()
+    exit()
+
 def scheduleRefresh(pgCall):
     print("refresh schedule")
     pgCall()
@@ -458,6 +492,8 @@ def showProdScreen():
     global stoptime
     global runtime
     global runBase
+    global stopBase
+    global stoptimeVal
     global runningVal
     global stopVal
     global efficiency
@@ -466,7 +502,7 @@ def showProdScreen():
     global lookBackDist
     global currRunStart
     global eatime
-    
+    global root
     global ACTION_DI
     global ADD_CNT_DI
     global DEC_CNT_DI
@@ -655,14 +691,14 @@ def showProdScreen():
     ########## END SCHEDULE TAB   ####################################
 
     #TESTING#############################################################
-    #testing = Tk()
-    #testing.title("Input tester")
+    testing = Tk()
+    testing.title("Input tester")
     #
-    #ACTION_TI = Button(testing, text = "Action", command =lambda:opAction("test"), width = 15, font = ("Curier", 16)).pack()
-    #ADD_CNT_TI = Button(testing, text = "Add Cnt", command =lambda:countUp("test"), width = 15, font = ("Curier", 16)).pack()
-    #DEC_CNT_TI = Button(testing, text = "Dec Cnt", command =lambda:countDown("test"), width = 15, font = ("Curier", 16)).pack()
-    #RESET_CNT_TI = Button(testing, text = "Reset Cnt", command =lambda:reset("test"), width = 15, font = ("Curier", 16)).pack()
-    #INC_OP_CNT_TI = Button(testing, text = "Inc Op", command =lambda:incrementOp("test"), width = 15, font = ("Curier", 16)).pack()
+    ACTION_TI = Button(testing, text = "Action", command =lambda:opAction("test"), width = 15, font = ("Curier", 16)).pack()
+    ADD_CNT_TI = Button(testing, text = "Add Cnt", command =lambda:countUp("test"), width = 15, font = ("Curier", 16)).pack()
+    DEC_CNT_TI = Button(testing, text = "Dec Cnt", command =lambda:countDown("test"), width = 15, font = ("Curier", 16)).pack()
+    RESET_CNT_TI = Button(testing, text = "Reset Cnt", command =lambda:reset("test"), width = 15, font = ("Curier", 16)).pack()
+    INC_OP_CNT_TI = Button(testing, text = "Inc Op", command =lambda:incrementOp("test"), width = 15, font = ("Curier", 16)).pack()
     #####################################################################
     
     # Start Up recovery.
@@ -670,8 +706,12 @@ def showProdScreen():
     trun, truntime = pgdrive.launchConfig(loadLastRecord)
 
     if trun:
-        runBase = time.time()-truntime.timestamp()
+        global count
+        truntime, runBase, stopBase, count = loadAllData()
         currRunStart = time.time()
+        countStr.set(count)
+        stoptimeVal = stopBase
+        stoptime.set(str("%02d"%int(stoptimeVal/3600))+":"+("%02d"%(stoptimeVal%3600/60))+":"+("%02d"%(stoptimeVal%60)))
         eatime.put(time.time())
         running = True
         runningVal.config(bg="green") # Color Change
@@ -680,5 +720,6 @@ def showProdScreen():
     global IsConfig
     IsConfig = True
     ani = animation.FuncAnimation(graphFigure,animate,interval=5000)
-    
+
+    root.protocol("WM_DELETE_WINDOW", on_close)
     root.mainloop()
