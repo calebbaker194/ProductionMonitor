@@ -427,8 +427,8 @@ def opAction(val):
         op.set(str(currentOp)+"/"+str(opCnt)) # set the Op UI label
         
     if(currentOp >= opCnt): # if current operations is equal to the number of operations per part
-        if opcnt < 0:
-            for x in range((opcnt*-1)):
+        if opCnt < 0:
+            for x in range((opCnt*-1)):
                 countUp("cnt") # add one the the item count on screen
                 ppmCnt = ppmCnt + 1 # add one to the actual parts array
                 eatime.put(time.time()) # Add a time stamp for the current created part.
@@ -451,7 +451,7 @@ def incrementOp(val):
     opCnt = opCnt + 1
     if opCnt >= 5:
         opCnt = -4;
-    if opCnt == 0:
+    if opCnt == 0 or opCnt == -1:
         opCnt = 1;
 
     if(opCnt < 0):
