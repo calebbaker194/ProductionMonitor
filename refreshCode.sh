@@ -1,6 +1,6 @@
 #!/bin/bash
 
-xhost +
+sudo xhost +
 cd /home/pi/src/ProductionMonitor
 git pull
 cp /home/pi/src/ProductionMonitor/* /home/pi/Desktop/Production
