@@ -419,14 +419,26 @@ def opAction(val):
     pyautogui.moveTo(0,1)
     
     opmCnt = opmCnt + 1 # add on the the operation per minute array
-
     currentOp = currentOp + 1 # add one to the current opperation on this part
-    op.set(str(currentOp)+"/"+str(opCnt)) # set the Op UI label 
-    if(currentOp == opCnt): # if current operations is equal to the number of operations per part
-        countUp("cnt") # add one the the item count on screen
-        ppmCnt = ppmCnt + 1 # add one to the actual parts array
-        eatime.put(time.time()) # Add a time stamp for the current created part.
-        calcTakt() # calculat the takt
+    
+    if(opCnt < 0):
+        op.set(str(currentOp)+"/1 * ("+str(opCnt*-1)+")")# set the Op UI label 
+    else:
+        op.set(str(currentOp)+"/"+str(opCnt)) # set the Op UI label
+        
+    if(currentOp >= opCnt): # if current operations is equal to the number of operations per part
+        if opCnt < 0:
+            for x in range((opCnt*-1)):
+                countUp("cnt") # add one the the item count on screen
+                ppmCnt = ppmCnt + 1 # add one to the actual parts array
+                eatime.put(time.time()) # Add a time stamp for the current created part.
+        else:
+            countUp("cnt") # add one the the item count on screen
+            ppmCnt = ppmCnt + 1 # add one to the actual parts array
+            eatime.put(time.time()) # Add a time stamp for the current created part.
+              
+        
+        calcTakt() # calculate the takt
         currentOp = 0 # reset the current operation to 0 for the next part
 
 # add one to the number of operations to produce an item
@@ -436,8 +448,16 @@ def incrementOp(val):
     global currentOp
     global opCnt
     currentOp = 0
-    opCnt = opCnt % 5 + 1
-    op.set(str(currentOp)+"/"+str(opCnt))
+    opCnt = opCnt + 1
+    if opCnt >= 5:
+        opCnt = -4;
+    if opCnt == 0 or opCnt == -1:
+        opCnt = 1;
+
+    if(opCnt < 0):
+        op.set(str(currentOp)+"/1 * ("+str(opCnt*-1)+")")
+    else:
+        op.set(str(currentOp)+"/"+str(opCnt))
 
 # Add one to the item count
 def countUp(val):
@@ -691,14 +711,14 @@ def showProdScreen():
     ########## END SCHEDULE TAB   ####################################
 
     #TESTING#############################################################
-    testing = Tk()
-    testing.title("Input tester")
+    #testing = Tk()
+    #testing.title("Input tester")
     #
-    ACTION_TI = Button(testing, text = "Action", command =lambda:opAction("test"), width = 15, font = ("Curier", 16)).pack()
-    ADD_CNT_TI = Button(testing, text = "Add Cnt", command =lambda:countUp("test"), width = 15, font = ("Curier", 16)).pack()
-    DEC_CNT_TI = Button(testing, text = "Dec Cnt", command =lambda:countDown("test"), width = 15, font = ("Curier", 16)).pack()
-    RESET_CNT_TI = Button(testing, text = "Reset Cnt", command =lambda:reset("test"), width = 15, font = ("Curier", 16)).pack()
-    INC_OP_CNT_TI = Button(testing, text = "Inc Op", command =lambda:incrementOp("test"), width = 15, font = ("Curier", 16)).pack()
+    #ACTION_TI = Button(testing, text = "Action", command =lambda:opAction("test"), width = 15, font = ("Curier", 16)).pack()
+    #ADD_CNT_TI = Button(testing, text = "Add Cnt", command =lambda:countUp("test"), width = 15, font = ("Curier", 16)).pack()
+    #DEC_CNT_TI = Button(testing, text = "Dec Cnt", command =lambda:countDown("test"), width = 15, font = ("Curier", 16)).pack()
+    #RESET_CNT_TI = Button(testing, text = "Reset Cnt", command =lambda:reset("test"), width = 15, font = ("Curier", 16)).pack()
+    #INC_OP_CNT_TI = Button(testing, text = "Inc Op", command =lambda:incrementOp("test"), width = 15, font = ("Curier", 16)).pack()
     #####################################################################
     
     # Start Up recovery.

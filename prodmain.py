@@ -1,8 +1,19 @@
 import dsplay
+import socket
 import time
+import sys
 from threading import Thread
 
 running = True
+
+def get_lock(process_name):
+    get_lock._lock_socket = socket.socket(socket.AF_UNIX, socket.SOCK_DGRAM)
+
+    try:
+        get_lock._lock_socket.bind('\0'+process_name)
+        print("Lock Acquired Starting program")
+    except socket.error:
+        sys.exit();
 
 def dbIsRegister():
     global running
@@ -32,5 +43,6 @@ def on_close():
     
 t2 = Thread(target = dsplay.showProdScreen)
 t1 = Thread(target = timeStep)
+get_lock('prodmon')
 dsplay.register(dbIsRegister)
 
