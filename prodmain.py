@@ -1,5 +1,7 @@
 import dsplay
+import socket
 import time
+import sys
 from threading import Thread
 
 running = True
