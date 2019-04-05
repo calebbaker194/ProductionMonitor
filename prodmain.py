@@ -13,6 +13,7 @@ def get_lock(process_name):
         get_lock._lock_socket.bind('\0'+process_name)
         print("Lock Acquired Starting program")
     except socket.error:
+        print("Could not Acquire Lock. Program Shutting Down")
         sys.exit();
 
 def dbIsRegister():
