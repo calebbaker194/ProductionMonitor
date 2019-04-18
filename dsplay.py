@@ -491,6 +491,7 @@ def on_close():
     
     main_close()
     time.sleep(1)
+    root.quit()
     root.destroy()
     GPIO.cleanup()
     exit()
