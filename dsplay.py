@@ -2,6 +2,7 @@ from tkinter import *
 from tkinter import ttk
 import queue
 import pgdrive
+import logging
 import RPi.GPIO as GPIO
 import threading
 import time
@@ -52,6 +53,8 @@ class ButtonHandler(threading.Thread):
 # Start up
 def register(callback):
     pgdrive.register(callback)
+
+logging.basicConfig(filename='debug.log', level=logging.DEBUG)
 
 # The following are all of the input pin numbers using I think the bcm numbering
 # This will be all the inputs for the program.
@@ -218,28 +221,28 @@ def saveData(): # Saves the last known running time in case of powerloss.
     global efficiency
     global count
 
-    print("Saving File")
+    logging.debug("Saving File")
     dfile = open("data", "w")
     dfile.write(str(time.time())+"\n") # last know running time
     dfile.write(str((runBase+(time.time()-currRunStart)))+"\n") # runbase Plus current run time
     dfile.write(str(stopBase)+"\n") # stop base at the last know running time
     dfile.write(str(count)) # The count at the time of the last save.
     dfile.close()
-    print("Save comlpete")
+    logging.debug("Save comlpete")
 
 def loadLastRecord():
-    print("Loading Last Record")
+    logging.debug("Loading Last Record")
     dfile = open("data", "r")
     return float(dfile.readline())
 
 def loadAllData():
-    print("Loading All Data")
+    logging.debug("Loading All Data")
     dfile = open("data", "r")
     return float(dfile.readline()), float(dfile.readline()), float(dfile.readline()), int(dfile.readline())
 
 def checkRunning(onMinute):
 
-    print("Check Running")
+    logging.debug("Check Running")
     global running
     global runtimeVal
     global stoptimeVal
@@ -321,7 +324,7 @@ def checkRunning(onMinute):
     stoptime.set(str("%02d"%int(stoptimeVal/3600))+":"+("%02d"%(stoptimeVal%3600/60))+":"+("%02d"%(stoptimeVal%60)))
 
 def isStopped():
-    print("Checking for Stop")
+    logging.debug("Checking for Stop")
     global eatime
     global lookBackTime
     global lastStopTime
@@ -329,12 +332,12 @@ def isStopped():
     l = list(eatime.queue) # Take all the operation time stamps and put them in a list
     l.sort(reverse=True) # sord the list most recent to oldest
 
-    print(l)
+    logging.debug(l)
 
     for x in l: # loop through the list. But we only look at the first one
         if x < time.time() - 60 * lookBackTime: # if the most recent stamp is older then (lookBackTime) minutes
             lastStopTime = x # set the stop here
-        print("Stopped ",x < time.time() - 60 * lookBackTime)
+        logging.debug("Stopped ",x < time.time() - 60 * lookBackTime)
         return x < time.time() - 60 * lookBackTime # return if the most recent punch is too old to be running.
 
 def animate(objData):
@@ -348,7 +351,7 @@ def animate(objData):
     
 
 def isRunning():
-    print("check to see if program is running")
+    logging.debug("check to see if program is running")
     global eatime
     global lookBackDist
     global lookBackTime
@@ -507,7 +510,7 @@ def on_close():
     exit()
 
 def scheduleRefresh(pgCall):
-    print("refresh schedule")
+    logging.debug("refresh schedule")
     pgCall()
 
 # Show the main screen to check production

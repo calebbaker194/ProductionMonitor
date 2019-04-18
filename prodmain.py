@@ -2,6 +2,8 @@ import dsplay
 import socket
 import time
 import sys
+import logging
+logging.basicConfig(filename='main.log', level=logging.DEBUG)
 from threading import Thread
 
 running = True
@@ -39,6 +41,8 @@ def timeStep():
         pass
 
 def on_close():
+    logger.debug("Close");
+    get_lock._lock_socket.close();
     global running
     running = False
     
