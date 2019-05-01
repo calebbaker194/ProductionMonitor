@@ -6,6 +6,7 @@ import logging
 import RPi.GPIO as GPIO
 import threading
 import time
+from datetime import datetime
 import matplotlib
 matplotlib.use("TkAgg")
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg, NavigationToolbar2Tk
@@ -213,6 +214,9 @@ def timeInc():
         ppmCnt = 0 # Set the current minute to 0
         opmCnt = 0 # 
 
+def getTime():
+    return datetime.utcfromtimestamp(time.time()).strftime('%Y-%m-%d %H:%M:%S')
+
 
 def saveData(): # Saves the last known running time in case of powerloss.
     global runBase
@@ -221,28 +225,28 @@ def saveData(): # Saves the last known running time in case of powerloss.
     global efficiency
     global count
 
-    logging.debug("Saving File")
+    logging.debug(getTime()+": Saving File")
     dfile = open("data", "w")
     dfile.write(str(time.time())+"\n") # last know running time
     dfile.write(str((runBase+(time.time()-currRunStart)))+"\n") # runbase Plus current run time
     dfile.write(str(stopBase)+"\n") # stop base at the last know running time
     dfile.write(str(count)) # The count at the time of the last save.
     dfile.close()
-    logging.debug("Save comlpete")
+    logging.debug(getTime()+": Save comlpete")
 
 def loadLastRecord():
-    logging.debug("Loading Last Record")
+    logging.debug(getTime()+": Loading Last Record")
     dfile = open("data", "r")
     return float(dfile.readline())
 
 def loadAllData():
-    logging.debug("Loading All Data")
+    logging.debug(getTime()+": Loading All Data")
     dfile = open("data", "r")
     return float(dfile.readline()), float(dfile.readline()), float(dfile.readline()), int(dfile.readline())
 
 def checkRunning(onMinute):
 
-    logging.debug("Check Running")
+    logging.debug(getTime()+": Check Running")
     global running
     global runtimeVal
     global stoptimeVal
@@ -324,7 +328,7 @@ def checkRunning(onMinute):
     stoptime.set(str("%02d"%int(stoptimeVal/3600))+":"+("%02d"%(stoptimeVal%3600/60))+":"+("%02d"%(stoptimeVal%60)))
 
 def isStopped():
-    logging.debug("Checking for Stop")
+    logging.debug(getTime()+": Checking for Stop")
     global eatime
     global lookBackTime
     global lastStopTime
@@ -337,7 +341,7 @@ def isStopped():
     for x in l: # loop through the list. But we only look at the first one
         if x < time.time() - 60 * lookBackTime: # if the most recent stamp is older then (lookBackTime) minutes
             lastStopTime = x # set the stop here
-        logging.debug("Stopped ",x < time.time() - 60 * lookBackTime)
+        logging.debug(getTime()+ ": Stopped "+ str(x < time.time() - 60 * lookBackTime))
         return x < time.time() - 60 * lookBackTime # return if the most recent punch is too old to be running.
 
 def animate(objData):
@@ -351,7 +355,7 @@ def animate(objData):
     
 
 def isRunning():
-    logging.debug("check to see if program is running")
+    logging.debug(getTime()+": check to see if program is running")
     global eatime
     global lookBackDist
     global lookBackTime
@@ -510,7 +514,7 @@ def on_close():
     exit()
 
 def scheduleRefresh(pgCall):
-    logging.debug("refresh schedule")
+    logging.debug(getTime()+": refresh schedule")
     pgCall()
 
 # Show the main screen to check production
@@ -725,14 +729,14 @@ def showProdScreen():
     ########## END SCHEDULE TAB   ####################################
 
     #TESTING#############################################################
-    #testing = Tk()
-    #testing.title("Input tester")
-    #
-    #ACTION_TI = Button(testing, text = "Action", command =lambda:opAction("test"), width = 15, font = ("Curier", 16)).pack()
-    #ADD_CNT_TI = Button(testing, text = "Add Cnt", command =lambda:countUp("test"), width = 15, font = ("Curier", 16)).pack()
-    #DEC_CNT_TI = Button(testing, text = "Dec Cnt", command =lambda:countDown("test"), width = 15, font = ("Curier", 16)).pack()
-    #RESET_CNT_TI = Button(testing, text = "Reset Cnt", command =lambda:reset("test"), width = 15, font = ("Curier", 16)).pack()
-    #INC_OP_CNT_TI = Button(testing, text = "Inc Op", command =lambda:incrementOp("test"), width = 15, font = ("Curier", 16)).pack()
+    testing = Tk()
+    testing.title("Input tester")
+    
+    ACTION_TI = Button(testing, text = "Action", command =lambda:opAction("test"), width = 15, font = ("Curier", 16)).pack()
+    ADD_CNT_TI = Button(testing, text = "Add Cnt", command =lambda:countUp("test"), width = 15, font = ("Curier", 16)).pack()
+    DEC_CNT_TI = Button(testing, text = "Dec Cnt", command =lambda:countDown("test"), width = 15, font = ("Curier", 16)).pack()
+    RESET_CNT_TI = Button(testing, text = "Reset Cnt", command =lambda:reset("test"), width = 15, font = ("Curier", 16)).pack()
+    INC_OP_CNT_TI = Button(testing, text = "Inc Op", command =lambda:incrementOp("test"), width = 15, font = ("Curier", 16)).pack()
     #####################################################################
     
     # Start Up recovery.

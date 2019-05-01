@@ -41,7 +41,7 @@ def timeStep():
         pass
 
 def on_close():
-    logger.debug("Close");
+    logging.debug("Close");
     get_lock._lock_socket.close();
     global running
     running = False
