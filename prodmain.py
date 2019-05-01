@@ -31,12 +31,15 @@ def dbIsRegister():
 def timeStep():
     try:
         while running:
-            # Get the current Time
-            cTime = time.time()
-            # Wait until the beginning of the next second
-            time.sleep(1-(cTime%1))
-            # Increment the Takt Keeper
-            dsplay.timeInc()
+            try:
+                # Get the current Time
+                cTime = time.time()
+                # Wait until the beginning of the next second
+                time.sleep(1-(cTime%1))
+                # Increment the Takt Keeper
+                dsplay.timeInc()
+            except:
+                logging.debug("Mail Loop Falure")
     except KeyboardInterrupt:
         pass
 
