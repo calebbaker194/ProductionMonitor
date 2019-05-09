@@ -248,7 +248,6 @@ def loadAllData():
 
 def checkRunning(onMinute):
 
-    logging.debug("Check Running")
     global running
     global runtimeVal
     global stoptimeVal
@@ -267,6 +266,9 @@ def checkRunning(onMinute):
     global graphYData
     global minutes
     global isUnderMod
+
+    if onMinute:
+        logging.debug("Check Running Currently "+ running)
     
     lastTakt = lastTakt + (.1*(taktval - lastTakt))
 
@@ -294,7 +296,7 @@ def checkRunning(onMinute):
         runtimeVal = runBase + (time.time() - currRunStart) # update the run time to the currrent running time
         if onMinute:
             saveData()
-        if(isStopped()): # Check to see if the program is stopped and if it is set the lastSopTime
+        if(isStopped(onMinute)): # Check to see if the program is stopped and if it is set the lastSopTime
             running = False # set the running flag to false
             runBase = runBase + (lastStopTime - currRunStart) # Set run Base = to all the previous run times plus the current ending run time
             eatime= queue.Queue() # reset the operation queue that calculates takt time
@@ -308,7 +310,7 @@ def checkRunning(onMinute):
         if frod != 0: # If there Has been a run today
             stoptimeVal = stopBase + (time.time() - lastStopTime) # Update the Stop Time Displayed
             
-        if (isRunning()) : # Check to see if the machine is running and set currRunStart if it is.
+        if (isRunning(onMinute)) : # Check to see if the machine is running and set currRunStart if it is.
             running = True # set running flag to True
             if lastStopTime != 0: # Check to make sure that we have stopped today To avoid counting the time since 12AM
                 stopBase = stopBase + (currRunStart - lastStopTime) # add this stop to the sum of stop time
@@ -329,11 +331,15 @@ def checkRunning(onMinute):
     runtime.set(str("%02d"%int(runtimeVal/3600))+":"+("%02d"%(runtimeVal%3600/60))+":"+("%02d"%(runtimeVal%60))) # update display with proper values
     stoptime.set(str("%02d"%int(stoptimeVal/3600))+":"+("%02d"%(stoptimeVal%3600/60))+":"+("%02d"%(stoptimeVal%60)))
 
-def isStopped():
-    logging.debug("Checking for Stop")
+def isStopped(onMin):
+    if onMin:
+        logging.debug("Checking for Stop")
     global eatime
     global lookBackTime
     global lastStopTime
+
+    if(eatime.qsize() < 1): # Check to see if the queue is empty
+        return True
     
     l = list(eatime.queue) # Take all the operation time stamps and put them in a list
     l.sort(reverse=True) # sord the list most recent to oldest
@@ -356,8 +362,9 @@ def animate(objData):
     graph.plot(list(graphXData.queue), list(graphYData.queue), 'C3')
     
 
-def isRunning():
-    logging.debug("check to see if program is running")
+def isRunning(onMin):
+    if onMin:
+        logging.debug("check to see if program is running")
     global eatime
     global lookBackDist
     global lookBackTime
