@@ -268,7 +268,7 @@ def checkRunning(onMinute):
     global isUnderMod
 
     if onMinute:
-        logging.debug("Check Running Currently "+ running)
+        logging.debug("Check Running Currently "+ str(running))
     
     lastTakt = lastTakt + (.1*(taktval - lastTakt))
 
