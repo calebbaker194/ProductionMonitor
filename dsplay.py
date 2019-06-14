@@ -600,7 +600,7 @@ def showProdScreen():
     # This is root container 
     root = Tk()
     root.title("Production")
-
+    root.attributes("-fullscreen", True)
     rowst = 0
     while rowst < 10:
         root.rowconfigure(rowst, weight = 1)

@@ -26,8 +26,5 @@ sudo apt-get -y build-dep postgresql-client-common
 sudo apt-get -y build-dep pgdg-keyring
 sudo apt-get -y install matchbox-keyboard
 sudo apt-get -y install libpq-dev
-sudo echo "DISPLAY=:0" > mycron
-sudo echo "* * * * * /home/pi/Desktop/refreshCode.sh" >> mycron
-sudo crontab mycron
-sudo rm mycron
+echo "@/home/pi/Desktop/refreshCode.sh" >> /home/pi/.config/lxsession/LXDE-pi/autostart
 reboot
