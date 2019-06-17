@@ -645,6 +645,8 @@ def showProdScreen():
     leftl = Frame(left)
     leftr = Frame(left)
     right = Frame(monitorTab)
+    bot = Frame(monitorTab)
+    botr = Frame(bot)
     
     # Creating Button and label widgets
     up = Button(right, text = "AddCnt", command = lambda:countUp("oi"), width = 15, font = ("Curier", 16))
@@ -665,6 +667,7 @@ def showProdScreen():
     taktVal = Label(topb, textvariable = takt, relief = RAISED, font =("Curier", 20), width = 10)
     operationVal = Label(topb, textvariable = op ,relief = RAISED,font = ("Curier", 20), width = 10)
     countVal = Label(topb, textvariable = countStr, relief = RAISED,font = ("Curier", 20), width = 10)
+    clock = Label(botr, font =("Curier", 20))
 
     runningVal.config(bg="gray")
     stopVal.config(bg="gray")
@@ -683,6 +686,8 @@ def showProdScreen():
     right.pack(side = RIGHT)
     topt.pack(side = TOP)
     topb.pack(side = BOTTOM)
+    bot.pack(side = BOTTOM)
+    botr.pack(side = RIGHT)
     totall.pack()
     blankl.pack()
     runningLabel.pack()
@@ -695,6 +700,15 @@ def showProdScreen():
     down.pack()
     reset.pack()
     blankl2.pack()
+    clock.pack(fill=BOTH, expand=1)
+   
+    def tick():
+        nonlocal clock
+        time2 = time.strftime('%H:%M')
+        clock.config(text=time2)
+        clock.after(1000, tick)
+
+    tick()
 
 
     ########## END MONITOR TAB    ####################################
