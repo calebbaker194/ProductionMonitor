@@ -12,12 +12,12 @@ station_name = ""
 LBD = 0
 mac = get_mac()
 passing = False
-while passing == False
+while not passing:
     try:
         pittsteel = psycopg2.connect("dbname=PittSteel host=192.168.2.3 user=caleb password=tori")
         cur = pittsteel.cursor()
         passing=True
-    except psycopg2.connect as e:
+    except psycopg2.OperationalError as e:
         pass
 
 station_id = -1
