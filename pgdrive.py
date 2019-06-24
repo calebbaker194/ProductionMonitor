@@ -11,13 +11,14 @@ LBT = 0
 station_name = ""
 LBD = 0
 mac = get_mac()
-time.sleep(5)
-
-try:
-    pittsteel = psycopg2.connect("dbname=PittSteel host=192.168.2.3 user=caleb password=tori")
-    cur = pittsteel.cursor()
-except psycopg2.connect as e:
-    pass
+passing = False
+while passing == False
+    try:
+        pittsteel = psycopg2.connect("dbname=PittSteel host=192.168.2.3 user=caleb password=tori")
+        cur = pittsteel.cursor()
+        passing=True
+    except psycopg2.connect as e:
+        pass
 
 station_id = -1
  
