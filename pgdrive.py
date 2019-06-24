@@ -11,6 +11,7 @@ LBT = 0
 station_name = ""
 LBD = 0
 mac = get_mac()
+time.sleep(5)
 pittsteel = psycopg2.connect("dbname=PittSteel host=192.168.2.3 user=caleb password=tori")
 
 cur = pittsteel.cursor()
