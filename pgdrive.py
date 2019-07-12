@@ -14,7 +14,7 @@ mac = get_mac()
 passing = False
 while not passing:
     try:
-        pittsteel = psycopg2.connect("dbname=PittSteel host=192.168.2.3 user=caleb password=tori")
+        pittsteel = psycopg2.connect("dbname=PittSteel host=192.168.2.6 user=caleb password=tori")
         cur = pittsteel.cursor()
         passing=True
     except psycopg2.OperationalError as e:
