@@ -262,8 +262,6 @@ def checkRunning(onMinute):
     global graphYData
     global minutes
     global isUnderMod
-
-    if onMinute:
     
     lastTakt = lastTakt + (.1*(taktval - lastTakt))
 
