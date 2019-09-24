@@ -225,24 +225,20 @@ def saveData(): # Saves the last known running time in case of powerloss.
     global efficiency
     global count
     try:
-        logging.debug("Saving File")
         dfile = open("data", "w")
         dfile.write(str(time.time())+"\n") # last know running time
         dfile.write(str((runBase+(time.time()-currRunStart)))+"\n") # runbase Plus current run time
         dfile.write(str(stopBase)+"\n") # stop base at the last know running time
         dfile.write(str(count)) # The count at the time of the last save.
         dfile.close()
-        logging.debug("Save comlpete")
     except:
         logging.debug("Save Failed")
 
 def loadLastRecord():
-    logging.debug("Loading Last Record")
     dfile = open("data", "r")
     return float(dfile.readline())
 
 def loadAllData():
-    logging.debug("Loading All Data")
     dfile = open("data", "r")
     return float(dfile.readline()), float(dfile.readline()), float(dfile.readline()), int(dfile.readline())
 
@@ -268,7 +264,6 @@ def checkRunning(onMinute):
     global isUnderMod
 
     if onMinute:
-        logging.debug("Check Running Currently "+ str(running))
     
     lastTakt = lastTakt + (.1*(taktval - lastTakt))
 
@@ -332,8 +327,7 @@ def checkRunning(onMinute):
     stoptime.set(str("%02d"%int(stoptimeVal/3600))+":"+("%02d"%(stoptimeVal%3600/60))+":"+("%02d"%(stoptimeVal%60)))
 
 def isStopped(onMin):
-    if onMin:
-        logging.debug("Checking for Stop")
+
     global eatime
     global lookBackTime
     global lastStopTime
@@ -344,12 +338,9 @@ def isStopped(onMin):
     l = list(eatime.queue) # Take all the operation time stamps and put them in a list
     l.sort(reverse=True) # sord the list most recent to oldest
 
-    logging.debug(l)
-
     for x in l: # loop through the list. But we only look at the first one
         if x < time.time() - 60 * lookBackTime: # if the most recent stamp is older then (lookBackTime) minutes
             lastStopTime = x # set the stop here
-        logging.debug("Stopped "+ str(x < time.time() - 60 * lookBackTime))
         return x < time.time() - 60 * lookBackTime # return if the most recent punch is too old to be running.
 
 def animate(objData):
@@ -363,8 +354,6 @@ def animate(objData):
     
 
 def isRunning(onMin):
-    if onMin:
-        logging.debug("check to see if program is running")
     global eatime
     global lookBackDist
     global lookBackTime
@@ -523,7 +512,6 @@ def on_close():
     exit()
 
 def scheduleRefresh(pgCall):
-    logging.debug("refresh schedule")
     pgCall()
 
 # Show the main screen to check production
