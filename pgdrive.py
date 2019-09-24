@@ -3,7 +3,7 @@ from uuid import getnode as get_mac
 import tkinter as tk
 import time
 import logging
-logging.basicConfig(filename='pgdrive.log', level=logging.DEBUG)
+logging.basicConfig(filename='pgdrive.log', level=logging.DEBUG, format='[%(asctime)s]: %(message)s')
 ACTION_di = 17
 ADD_CNT_di = 5
 DEC_CNT_di = 27
