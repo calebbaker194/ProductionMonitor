@@ -100,6 +100,12 @@ def insertActivity(actType, actTime):
         global station_id
         global pittsteel
 
+        if actType == "Start":
+            cur.execute("""SELECT activity_type FROM psproductivity.activity WHERE activity_station_id=%s ORDER BY activity_time DESC LIMIT 1""",(station_id))
+            for row in cur:
+                if row[0] == "Start":
+                    return
+        
         cur.execute("""INSERT INTO psproductivity.activity (activity_type,activity_time,activity_station_id) VALUES(%s,to_timestamp(%s), %s)""",(actType, actTime ,station_id))
         pittsteel.commit()
     except Exception as e:

@@ -299,7 +299,6 @@ def checkRunning(onMinute):
                 currRunStart = 0 # resest the start time of the current run to 0
                 runningVal.config(bg="gray") # change colors
                 stopVal.config(bg="red") #
-                pgdrive.insertActivity("Stop",lastStopTime) # Insert Stop Time in database
         else: # If the program is in the stopped state
             if frod != 0: # If there Has been a run today
                 stoptimeVal = stopBase + (time.time() - lastStopTime) # Update the Stop Time Displayed
