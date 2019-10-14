@@ -101,15 +101,18 @@ def insertActivity(actType, actTime):
         global pittsteel
 
         if actType == "Start":
-            cur.execute("""SELECT activity_type FROM psproductivity.activity WHERE activity_station_id=%s ORDER BY activity_time DESC LIMIT 1""",(station_id))
+            cur.execute("""SELECT activity_type FROM psproductivity.activity WHERE activity_station_id=%s ORDER BY activity_time DESC LIMIT 1""",(station_id,))
             for row in cur:
                 if row[0] == "Start":
                     return
+                else :
+                    break
         
         cur.execute("""INSERT INTO psproductivity.activity (activity_type,activity_time,activity_station_id) VALUES(%s,to_timestamp(%s), %s)""",(actType, actTime ,station_id))
         pittsteel.commit()
     except Exception as e:
-        logging.debug("Insert Activity Failed: "+e.message)
+        print(e)
+        logging.debug("Insert Activity Failed")
 
 def insertprodtakt(takt, takttime):
     try:
@@ -120,7 +123,7 @@ def insertprodtakt(takt, takttime):
         pittsteel.commit()
 
     except Exception as e:
-        logging.debug("Insert Activity Failed: "+e.message)
+        logging.debug("Insert Prodtakt Failed: ")
 
 def getSched(treeview):
     global station_id
@@ -148,6 +151,9 @@ def launchConfig(lastRecord):
     rrunning = False
     rStartTime = 0
 
+    if cur.rowcount == 0:
+        return rrunning, rStartTime;
+    
     for row in cur:
         if(row[0] == 'Start'):
             ttime  = lastRecord()

@@ -39,7 +39,7 @@ def timeStep():
                 # Increment the Takt Keeper
                 dsplay.timeInc()
             except:
-                logging.debug("Mail Loop Falure")
+                logging.debug("Main Loop Falure")
     except KeyboardInterrupt:
         pass
 
