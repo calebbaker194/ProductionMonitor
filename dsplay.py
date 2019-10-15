@@ -290,13 +290,13 @@ def checkRunning(onMinute):
             if onMinute:
                 saveData()
             if(isStopped(onMinute)): # Check to see if the program is stopped and if it is set the lastSopTime
-                pgdrive.insertActivity("Stop",lastStopTime) # Insert Stop Time in database
                 running = False # set the running flag to false
                 runBase = runBase + (lastStopTime - currRunStart) # Set run Base = to all the previous run times plus the current ending run time
                 eatime= queue.Queue() # reset the operation queue that calculates takt time
                 runtimeVal = runBase # Set the displayed runtime value to the correct run time
                 stoptimeVal = stopBase + (time.time() - lastStopTime) # set the stoptime value to the previus stops plus the current added stop
                 currRunStart = 0 # resest the start time of the current run to 0
+                pgdrive.insertActivity("Stop", lastStopTime)  # Insert Stop Time in database
                 runningVal.config(bg="gray") # change colors
                 stopVal.config(bg="red") #
         else: # If the program is in the stopped state
@@ -309,10 +309,10 @@ def checkRunning(onMinute):
                     stopBase = stopBase + (currRunStart - lastStopTime) # add this stop to the sum of stop time
                 lastStopTime = 0 # reset the last Stop Time
                 stoptimeVal = stopBase # Chage the display value
-                runtimeVal = runBase + (time.time() - currRunStart) # change the running display to the run time plus the current run 
+                runtimeVal = runBase + (time.time() - currRunStart) # change the running display to the run time plus the current run
+                pgdrive.insertActivity("Start", currRunStart)  # Add A Start Time to the Database
                 runningVal.config(bg="green") # Color Change
                 stopVal.config(bg="gray") #
-                pgdrive.insertActivity("Start",currRunStart) # Add A Start Time to the Database
 
         if stoptimeVal > 0:
             efficiency.set(str("%01d"%(int(runtimeVal/(stoptimeVal+runtimeVal)*100)))+"%")
@@ -333,6 +333,11 @@ def isStopped(onMin):
     global lastStopTime
 
     if(eatime.qsize() < 1): # Check to see if the queue is empty
+        lst = pgdrive.getLastPiece()
+        if lst == -1:
+            lastStopTime = time.time()
+        else:
+            lastStopTime = lst
         return True
     
     l = list(eatime.queue) # Take all the operation time stamps and put them in a list
@@ -341,7 +346,7 @@ def isStopped(onMin):
     for x in l: # loop through the list. But we only look at the first one
         if x < time.time() - 60 * lookBackTime: # if the most recent stamp is older then (lookBackTime) minutes
             lastStopTime = x # set the stop here
-        return x < time.time() - 60 * lookBackTime # return if the most recent punch is too old to be running.
+        return x < time.time() - 60 * lookBackTime # return True if the most recent punch is too old to be running.
 
 def animate(objData):
     global isUnderMod
@@ -544,6 +549,8 @@ def showProdScreen():
     global RESET_CNT_DI
     global INC_OP_CNT_DI
 
+    isTesting = True ## Variable to change for testing the code
+
     ACTION_DI = pgdrive.ACTION_di
     ADD_CNT_DI = pgdrive.ADD_CNT_di
     DEC_CNT_DI = pgdrive.DEC_CNT_di
@@ -588,7 +595,7 @@ def showProdScreen():
     # This is root container 
     root = Tk()
     root.title("Production")
-    root.attributes("-fullscreen", True)
+    root.attributes("-fullscreen", not isTesting)
     rowst = 0
     while rowst < 10:
         root.rowconfigure(rowst, weight = 1)
@@ -738,7 +745,7 @@ def showProdScreen():
     refreshSched.pack()
     
     ########## END SCHEDULE TAB   ####################################
-    isTesting = False
+
     #TESTING#############################################################
     if isTesting :
         testing = Tk()

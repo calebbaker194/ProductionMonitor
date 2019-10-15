@@ -1,5 +1,6 @@
 import psycopg2
 from uuid import getnode as get_mac
+from datetime import datetime
 import tkinter as tk
 import time
 import logging
@@ -36,6 +37,16 @@ def setStationId(station,callmain):
         callmain()
     except Exception as e:
         logging.debug("Set Station id failed: "+e.message)
+
+def getLastPiece():
+    global station_id
+    try:
+        cur.execute("""SELECT prodtakt_start FROM psproductivity.prodtakt WHERE prodtakt_station_id = %s ORDER BY prodtakt_start DESC LIMIT 1""",(station_id,))
+        rows = cur.fetchall()
+        return rows[0][0].timestamp()
+    except Exception as e:
+        return -1
+
 
 def register(callmain):
     global mac
