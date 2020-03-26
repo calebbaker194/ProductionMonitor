@@ -15,9 +15,12 @@ station_name = ""
 LBD = 0
 mac = get_mac()
 passing = False
+# The id for the current running record
+activity_id = -1;
+
 while not passing:
     try:
-        pittsteel = psycopg2.connect("dbname=PittSteel host=192.168.2.6 user=caleb password=tori")
+        pittsteel = psycopg2.connect("dbname=PittSteel host=192.168.2.6 user=prodmon password=prodmonpass")
         cur = pittsteel.cursor()
         passing=True
     except psycopg2.OperationalError as e:
@@ -106,25 +109,35 @@ def register(callmain):
         setStationId(rows[0][0],callmain)
 
 
-def insertActivity(actType, actTime):
+def start(actTime):
+    global station_id
+    global pittsteel
+    global activity_id
     try:
-        global station_id
-        global pittsteel
-
-        if actType == "Start":
-            cur.execute("""SELECT activity_type FROM psproductivity.activity WHERE activity_station_id=%s ORDER BY activity_time DESC LIMIT 1""",(station_id,))
-            for row in cur:
-                if row[0] == "Start":
-                    return
-                else :
-                    break
-        
-        cur.execute("""INSERT INTO psproductivity.activity (activity_type,activity_time,activity_station_id) VALUES(%s,to_timestamp(%s), %s)""",(actType, actTime ,station_id))
+        cur.execute("""SELECT nextVal('psproductivity.activity_activity_id_seq') AS result""")
+        row = cur.fetchall()
+        activity_id = row[0][0]
+        cur.execute("""INSERT INTO psproductivity.activity (activity_id,activity_start_time,activity_station_id) VALUES(%s,to_timestamp(%s), %s)""",(activity_id, actTime ,station_id))
         pittsteel.commit()
     except Exception as e:
         print(e)
-        logging.debug("Insert Activity Failed")
+        logging.debug("Start Failed")
+        activity_id = -1;
 
+
+def stop(actTime):
+    global station_id
+    global pittsteel
+    global activity_id
+    try:
+        if(activity_id == -1):
+            logging.debug("Cannot Set stop time when no activity has been set.")
+        cur.execute("""UPDATE psproductivity.activity SET activity_stop_time = to_timestamp(%s) WHERE activity_id = %s""",(actTime, activity_id))
+        pittsteel.commit()
+        activity_id = -1;
+    except Exception as e:
+        print(e)
+        logging.debug("Setting Stop time Failed")
 def insertprodtakt(takt, takttime):
     try:
         global station_id
@@ -161,18 +174,20 @@ def launchConfig(lastRecord):
     WHERE activity_station_id = %s ORDER BY activity_time DESC LIMIT 1""",(station_id,))
     rrunning = False
     rStartTime = 0
+    global activity_id
 
     if cur.rowcount == 0:
         return rrunning, rStartTime;
     
     for row in cur:
-        if(row[0] == 'Start'):
-            ttime  = lastRecord()
+        activity_id, ttime = lastRecord()
+        if(activity_id != -1):
+            activity_id,ttime  = lastRecord()
             if(time.time() - ttime < LBT * 60): # It hasnt been too long just pick up the last running time and set it to running 
                 rrunning =True
                 rStartTime = row[1]
             else:
-                insertActivity('Stop',ttime) # Otherwise give us a nice stop for the last time it was runnning
+                stop(ttime) # Otherwise give us a nice stop for the last time it was runnning
         break
 
     return rrunning, rStartTime

@@ -224,8 +224,10 @@ def saveData(): # Saves the last known running time in case of powerloss.
     global currRunStart
     global efficiency
     global count
+    pgdrive.activity_id
     try:
         dfile = open("data", "w")
+        dfile.write(pgdrive.activity_id+"\n")# the ID of the current run. Or -1 if its stopped.
         dfile.write(str(time.time())+"\n") # last know running time
         dfile.write(str((runBase+(time.time()-currRunStart)))+"\n") # runbase Plus current run time
         dfile.write(str(stopBase)+"\n") # stop base at the last know running time
@@ -236,11 +238,16 @@ def saveData(): # Saves the last known running time in case of powerloss.
 
 def loadLastRecord():
     dfile = open("data", "r")
-    return float(dfile.readline())
+    try:
+        actid = int(dfile.readline())
+        flt = float(dfile.readline())
+        return actid,flt
+    except ValueError:
+        return -1,0.0
 
 def loadAllData():
     dfile = open("data", "r")
-    return float(dfile.readline()), float(dfile.readline()), float(dfile.readline()), int(dfile.readline())
+    return int(dfile.readline()),float(dfile.readline()), float(dfile.readline()), float(dfile.readline()), int(dfile.readline())
 
 def checkRunning(onMinute):
     try:
@@ -272,12 +279,12 @@ def checkRunning(onMinute):
         graphYData.get()
         isUnderMod = False
 
-        if(frod == 0 and list(ppmArray.queue)[1] > 0): # If there has not run today and parts were produced this minute.
-            frod = int(time.time() / 86400) # Set the first run of the day to today
+        if frod == 0 and list(ppmArray.queue)[1] > 0:  # If there has not run today and parts were produced this minute.
+            frod = int(time.time() / 86400)  # Set the first run of the day to today
 
-        if frod != 0: # If the machine has been run today
-            if frod != int(time.time() / 86400): # check to so see if the days match
-                frod = 0 # If the do not then set the program to no runs today And reset the running and stop counters
+        if frod != 0:  # If the machine has been run today
+            if frod != int(time.time() / 86400):  # check to so see if the days match
+                frod = 0  # If the do not then set the program to no runs today And reset the running and stop counters
                 runtimeVal = 0
                 runBase = 0
                 lastStopTime = 0
@@ -286,33 +293,35 @@ def checkRunning(onMinute):
                 stoptimeVal = 0
         
         if running: # If the program is in the running state
-            runtimeVal = runBase + (time.time() - currRunStart) # update the run time to the currrent running time
+            runtimeVal = runBase + (time.time() - currRunStart)  # update the run time to the current running time
             if onMinute:
                 saveData()
-            if(isStopped(onMinute)): # Check to see if the program is stopped and if it is set the lastSopTime
-                running = False # set the running flag to false
-                runBase = runBase + (lastStopTime - currRunStart) # Set run Base = to all the previous run times plus the current ending run time
-                eatime= queue.Queue() # reset the operation queue that calculates takt time
-                runtimeVal = runBase # Set the displayed runtime value to the correct run time
-                stoptimeVal = stopBase + (time.time() - lastStopTime) # set the stoptime value to the previus stops plus the current added stop
-                currRunStart = 0 # resest the start time of the current run to 0
-                pgdrive.insertActivity("Stop", lastStopTime)  # Insert Stop Time in database
-                runningVal.config(bg="gray") # change colors
-                stopVal.config(bg="red") #
+            if(isStopped(onMinute)):  # Check to see if the program is stopped and if it is set the lastSopTime
+                running = False  # set the running flag to false
+                #  Set run Base = to all the previous run times plus the current ending run time
+                runBase = runBase + (lastStopTime - currRunStart)
+                eatime= queue.Queue()  # reset the operation queue that calculates takt time
+                runtimeVal = runBase  # Set the displayed runtime value to the correct run time
+                # set the stoptime value to the previous stops plus the current added  stop
+                stoptimeVal = stopBase + (time.time() - lastStopTime)
+                currRunStart = 0  # reset the start time of the current run to 0
+                pgdrive.stop(lastStopTime)  # Insert Stop Time in database
+                runningVal.config(bg="gray")  # change colors
+                stopVal.config(bg="red")  #
         else: # If the program is in the stopped state
-            if frod != 0: # If there Has been a run today
-                stoptimeVal = stopBase + (time.time() - lastStopTime) # Update the Stop Time Displayed
+            if frod != 0 or stopBase > 0: # If there Has been a run today
+                stoptimeVal = stopBase + (time.time() - lastStopTime)  # Update the Stop Time Displayed
                 
-            if (isRunning(onMinute)) : # Check to see if the machine is running and set currRunStart if it is.
-                running = True # set running flag to True
-                if lastStopTime != 0: # Check to make sure that we have stopped today To avoid counting the time since 12AM
-                    stopBase = stopBase + (currRunStart - lastStopTime) # add this stop to the sum of stop time
-                lastStopTime = 0 # reset the last Stop Time
-                stoptimeVal = stopBase # Chage the display value
-                runtimeVal = runBase + (time.time() - currRunStart) # change the running display to the run time plus the current run
-                pgdrive.insertActivity("Start", currRunStart)  # Add A Start Time to the Database
-                runningVal.config(bg="green") # Color Change
-                stopVal.config(bg="gray") #
+            if (isRunning(onMinute)) :  # Check to see if the machine is running and set currRunStart if it is.
+                running = True  # set running flag to True
+                if lastStopTime != 0:  # Check stopped today To avoid counting the time since 12AM
+                    stopBase = stopBase + (currRunStart - lastStopTime)  # add this stop to the sum of stop time
+                lastStopTime = 0  # reset the last Stop Time
+                stoptimeVal = stopBase  # Chage the display value
+                runtimeVal = runBase + (time.time() - currRunStart)  # change running display run time + the current run
+                pgdrive.start(currRunStart)  # Add A Start Time to the Database
+                runningVal.config(bg="green")  # Color Change
+                stopVal.config(bg="gray")  #
 
         if stoptimeVal > 0:
             efficiency.set(str("%01d"%(int(runtimeVal/(stoptimeVal+runtimeVal)*100)))+"%")
@@ -320,8 +329,9 @@ def checkRunning(onMinute):
             efficiency.set("100%")
         else:
             efficiency.set("0%")
-            
-        runtime.set(str("%02d"%int(runtimeVal/3600))+":"+("%02d"%(runtimeVal%3600/60))+":"+("%02d"%(runtimeVal%60))) # update display with proper values
+
+        # update display with proper values
+        runtime.set(str("%02d"%int(runtimeVal/3600))+":"+("%02d"%(runtimeVal%3600/60))+":"+("%02d"%(runtimeVal%60)))
         stoptime.set(str("%02d"%int(stoptimeVal/3600))+":"+("%02d"%(stoptimeVal%3600/60))+":"+("%02d"%(stoptimeVal%60)))
     except Exception as e:
         logging.debug(e.message)
@@ -549,7 +559,7 @@ def showProdScreen():
     global RESET_CNT_DI
     global INC_OP_CNT_DI
 
-    isTesting = False ## Variable to change for testing the code
+    isTesting = True ## Variable to change for testing the code
 
     ACTION_DI = pgdrive.ACTION_di
     ADD_CNT_DI = pgdrive.ADD_CNT_di
@@ -764,7 +774,7 @@ def showProdScreen():
 
     if trun:
         global count
-        truntime, runBase, stopBase, count = loadAllData()
+        pgdrive.activity_id,truntime, runBase, stopBase, count = loadAllData()
         currRunStart = time.time()
         countStr.set(count)
         stoptimeVal = stopBase
