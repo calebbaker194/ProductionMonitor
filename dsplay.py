@@ -227,7 +227,7 @@ def saveData(): # Saves the last known running time in case of powerloss.
     pgdrive.activity_id
     try:
         dfile = open("data", "w")
-        dfile.write(pgdrive.activity_id+"\n")# the ID of the current run. Or -1 if its stopped.
+        dfile.write(str(pgdrive.activity_id)+"\n")# the ID of the current run. Or -1 if its stopped.
         dfile.write(str(time.time())+"\n") # last know running time
         dfile.write(str((runBase+(time.time()-currRunStart)))+"\n") # runbase Plus current run time
         dfile.write(str(stopBase)+"\n") # stop base at the last know running time
