@@ -3,7 +3,20 @@ from uuid import getnode as get_mac
 from datetime import datetime
 import tkinter as tk
 import time
+import socket
 import logging
+
+def get_ip():
+    s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+    try:
+        s.connect(('10.255.255.255',1))
+        IP = s.getsockname()[0]
+    except:
+        IP = '127.0.0.1'
+    finally:
+        s.close()
+    return IP
+
 logging.basicConfig(filename='pgdrive.log', level=logging.DEBUG, format='[%(asctime)s]: %(message)s')
 ACTION_di = 17
 ADD_CNT_di = 5
@@ -61,7 +74,7 @@ def register(callmain):
         global pittsteel
         global LBT
         global LBD
-        cur.execute("""INSERT INTO psproductivity.station (station_name,station_mac,station_lbt,station_lbd,action,addcnt,deccnt,resetcnt,incop) VALUES(%s,%s,%s,%s,%s,%s,%s,%s,%s)""",(name,mac,time,dist,17,5,27,18,12))
+        cur.execute("""INSERT INTO psproductivity.station (station_name,station_mac,station_lbt,station_lbd,action,addcnt,deccnt,resetcnt,incop,station_ip_addr) VALUES(%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)""",(name,mac,time,dist,17,5,27,18,12,get_ip()))
         pittsteel.commit()
         cur.execute("""SELECT station_lbt,station_lbd FROM psproductivity.station WHERE station_mac = %s;""",(mac,))
         rows2 = cur.fetchall()
@@ -106,6 +119,8 @@ def register(callmain):
         INC_OP_CNT_di = rows2[0][6]
         LBT = rows2[0][0]
         LBD = rows2[0][1]
+        cur.execute("""UPDATE psproductivity.station SET station_ip_addr = %s WHERE station_id = %s""",(get_ip(),rows[0][0]))
+        pittsteel.commit()
         setStationId(rows[0][0],callmain)
 
 

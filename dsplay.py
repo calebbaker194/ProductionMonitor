@@ -559,7 +559,7 @@ def showProdScreen():
     global RESET_CNT_DI
     global INC_OP_CNT_DI
 
-    isTesting = True ## Variable to change for testing the code
+    isTesting = False ## Variable to change for testing the code
 
     ACTION_DI = pgdrive.ACTION_di
     ADD_CNT_DI = pgdrive.ADD_CNT_di
