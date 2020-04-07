@@ -185,8 +185,8 @@ def updateWork(woitem_id, qty):
 
 def launchConfig(lastRecord):
     cur.execute("""
-    SELECT activity_type, activity_time FROM psproductivity.activity
-    WHERE activity_station_id = %s ORDER BY activity_time DESC LIMIT 1""",(station_id,))
+    SELECT activity_start_time,activity_stop_time FROM psproductivity.activity
+    WHERE activity_station_id = %s ORDER BY activity_start_time DESC LIMIT 1""",(station_id,))
     rrunning = False
     rStartTime = 0
     global activity_id
