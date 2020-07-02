@@ -65,7 +65,7 @@ DEC_CNT_DI = 27
 RESET_CNT_DI = 18
 INC_OP_CNT_DI = 12
 
-
+isTesting = False ## Variable to change for testing the code
 ## Program data and variables ##
 
 # root variable for tkinter
@@ -188,10 +188,12 @@ efficiency = ()
 
 # Main logic of performance indication will occure every second to keep run time and stop time live
 def timeInc():
-
     global lastUpdate
     global ppmCnt
     global opmCnt
+
+    if pgdrive.isConnected():
+        pgdrive.emptyQueue()
 
     onminute = (lastUpdate != int(time.time()%3600/60))
 
@@ -201,7 +203,6 @@ def timeInc():
     checkRunning(onminute) # Check running (True Or False) True if it is on the minute
 
     if(onminute): # On the Minute
-
         addTaktToDB() # Adds the parts produced to the database unless it == 0
         
         lastUpdate = int(time.time()%3600/60) # Update the last time the Production was added
@@ -212,11 +213,10 @@ def timeInc():
         ppmArray.get()
 
         ppmCnt = 0 # Set the current minute to 0
-        opmCnt = 0 # 
+        opmCnt = 0 #
 
 def getTime():
     return datetime.utcfromtimestamp(time.time()).strftime('%Y-%m-%d %H:%M:%S')
-
 
 def saveData(): # Saves the last known running time in case of powerloss.
     global runBase
@@ -366,7 +366,6 @@ def animate(objData):
     while isUnderMod:
         time.sleep(.001)
     graph.plot(list(graphXData.queue), list(graphYData.queue), 'C3')
-    
 
 def isRunning(onMin):
     global eatime
@@ -374,7 +373,7 @@ def isRunning(onMin):
     global lookBackTime
     global currRunStart
     global lookBackDist
-    
+    print('running? ', eatime.qsize())
     count = 1 # count of the number of operations in the time window
     if(eatime.qsize() < lookBackDist): # if the queue of time stamps isnt long enough to determin a run
         return False; # return that the machine is not running
@@ -398,7 +397,6 @@ def addTaktToDB():
     
     if ppmCnt != 0: # If there were parts produced last minute
         pgdrive.insertprodtakt(ppmCnt, time.time() - 60) # insert the number of parts produced last mintute
-
 
 # Calc Takt time and display on the monitor also remove old times
 def calcTakt():
@@ -432,9 +430,6 @@ def calcTakt():
     taktval = average
     takt.set("{0:.2f} /min".format(average)) # set the UI label
 
-        
-            
-
 # Fire when an operation occurs
 def opAction(val):
     global currentOp
@@ -444,9 +439,9 @@ def opAction(val):
     global opCnt
     global ppmCnt
     global eatime
-
-    pyautogui.moveTo(0,0)
-    pyautogui.moveTo(0,1)
+    if not isTesting:
+        pyautogui.moveTo(0,0)
+        pyautogui.moveTo(0,1)
     
     opmCnt = opmCnt + 1 # add on the the operation per minute array
     currentOp = currentOp + 1 # add one to the current opperation on this part
@@ -495,7 +490,6 @@ def countUp(val):
     global countStr
     count = count + 1
     countStr.set(count)
-
 
 # Take on of the item count
 def countDown(val):
@@ -558,8 +552,6 @@ def showProdScreen():
     global DEC_CNT_DI
     global RESET_CNT_DI
     global INC_OP_CNT_DI
-
-    isTesting = False ## Variable to change for testing the code
 
     ACTION_DI = pgdrive.ACTION_di
     ADD_CNT_DI = pgdrive.ADD_CNT_di

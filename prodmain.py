@@ -5,7 +5,6 @@ import sys
 import logging
 logging.basicConfig(filename='main.log', level=logging.DEBUG)
 from threading import Thread
-
 running = True
 
 def get_lock(process_name):
